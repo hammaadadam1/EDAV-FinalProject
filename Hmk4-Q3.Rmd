@@ -1,93 +1,140 @@
 ---
-title: "EDAV Final Project"
-author: "Lea Collin"
-date: "November 14, 2018"
-output: pdf_document
+title: "Hmk4-Q3"
+author: "Ling He"
+date: "11/12/2018"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
-In this final project, my group and I will be looking at Spotify data provided by the students in EDAV. We thought it would be interesting to look at the music tastes of our class. We will specifically be looking at the playlists automatically created by Spotify last year at the end of 2017 entitled 'Your Top Songs 2017'. This is a playlist that Spotify automatically created of the 100 most played songs for each of its users in the year 2017. This seems like it will be a pretty good indicator of people's personal music tastes...or at least a look into how their 2017 was. 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-For this project, we will be using the Spotify API and the R package for it, Spotifyr. Note that we are using the dev version of this package, not the CRAN version. 
+### **Introduction**
+We will use Spotify playlist data in our final project. Specifically, we plan to collect our classmates' Spotify "Your Top Songs 2017" playlists. We are curious about different metrics of each song, and how they correlate with each other or other variables. For this homework assignment, I will examine the energy variable out of the following 7 song metrics, valence, danceability, instrumentalness, energy, acousticness, liveness, and speechiness. Each of these metrics have values between 0 and 1, representing the level of each variable. Energy represents a perceptual measure of intensity and activity of a song. 
 
-```{r, include = FALSE, cache = TRUE}
+### **Data**
+
+```{r}
+#load the data using api
 library(spotifyr)
-Sys.setenv(SPOTIFY_CLIENT_ID = 'b273df75336c485596266c68d3e7c1c2')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = 'e88980163181450eb429c2f3f4723f90')
+Sys.setenv(SPOTIFY_CLIENT_ID = '0b3813c7cd26432c841f9c000a96697e')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '5a7943eedb8948abb42b6a1df709e47b')
 
 access_token <- get_spotify_access_token()
-```
 
-For this assignment, I will be looking at the danceability of mine and my group's "Your Top Songs 2017". I am hoping that along the way I will gain interesting insights about how this track feature is related to other variables as well as how it is distributed across my group members. 
-
-The very first step is to load the playlist from my Spotify account and get the audio features. That is what the following code chunk accomplishes. 
-
-```{r, cache = TRUE}
 library(tidyverse)
-playlists <- get_user_playlists('leac750')
-my_2017 <- playlists[which(playlists$playlist_name == 'Your Top Songs 2017'),]
-# my_2017 <- get_playlist_tracks(my_2017)
-my_2017 <- get_playlist_audio_features('leac750', my_2017$playlist_uri)
-```
 
-Danceability is a continous variable between 0 and 1 so it seems reasonable to start with a histogram as a first visualization. Note that the below histogram will only show the danceability of songs within my playlist. I've played around a bit with the number of bins to be able to see the main patterns without getting too caught in capturing every minute detail.
+playlist_Hammand <- get_playlist_audio_features("1256140081", "37i9dQZF1E9ECwVUJQFrgP")
+playlist_Danielle <- get_playlist_audio_features("danielle219", "37i9dQZF1E9Lke9WJ01eT7")
+playlist_Kelly <- get_playlist_audio_features("22ugjl3xvvzgwtbwi3ubpt72a", "37i9dQZF1E9VRPVezelVUk")
+playlist_Lea <- get_playlist_audio_features("leac750", "37i9dQZF1E9UKwJS1D9012")
+
+
+playlist_Hammand$owner = "Hammand"
+playlist_Danielle$owner = "Danielle"
+playlist_Kelly$owner = "Kelly"
+playlist_Lea$owner = "Lea" 
+
+playlists = list(playlist_Hammand, playlist_Danielle, playlist_Kelly, playlist_Lea)
+
+#join playlists with genre
+for (i in 1: length(playlists)){
+  artists<- unique(playlists[[i]]$artist_name)
+  genre<- get_artists(artists[1], return_closest_artist = TRUE)
+  
+  for(j in 2:length(artists)){
+    genre<- rbind(genre, get_artists(artists[j], return_closest_artist = TRUE))
+  }
+  
+  playlists[[i]] <- playlists[[i]] %>% left_join(genre)
+}
+
+library(fmsb)
+
+#select the song metrics variables and combine them into one data frame
+out_df <- NULL
+for (i in 1: length(playlists)){
+  variables <- playlists[[i]] %>% select(valence, danceability, instrumentalness,
+                            energy, acousticness, liveness, speechiness, owner,
+                            artist_genres, artist_name)
+
+  out_df <- rbind(out_df, variables)
+}
+```
+We collected "Your Top Songs 2017" playlists of our four team members, and organized it into a desirable format for our analysis.
+
+### **Exploratory Analysis**
 
 ```{r}
-my_dance_hist <- ggplot(my_2017, aes(x = danceability)) +
-  geom_histogram(color = "blue", fill = "#99CCFF", bins = 20) +
-  scale_x_continuous(breaks = seq(min(0), max(1.0), by = 0.1)) +
-  ylab("Frequency")
-my_dance_hist
-```
 
-There are definitely two modes here, one at ~0.65 danceability and one at ~0.75. What is clear is that there are a higher number of songs that have at least 0.5 danceability or higher in my playlist (I am not surprised by this). I will also look at a density curve of this variable for my playlist simply because it was a bit hard to choose the number of bins that was appropriate and the density curve allows us to circumvent this issue. I think I will also make density curve graphs for my group members' playlists as well to more easily compare the danceability between our playlists. 
+library(pgmm)
+library(GGally)
+
+ggparcoord(out_df, columns = 1:7, alphaLines = .3, 
+           scale = "uniminmax", groupColumn = "owner", splineFactor = 10) +
+  ggtitle("How different is everyone's 2017 playlist? ") +
+  theme_minimal()
+  
+
+```
+The above parallel coordinate plot shows the song metrics pattern for each of our team members. This provides a holistic view of all 7 song metrics. We observe that Kelly's pattern is distinctly different from all her teammates. In particular, she has relatively lower values of energy and speechiness, and higher values of acousticness. We are curious about what the contributing factors are to everyone's pattern. 
+
 
 ```{r}
-my_dance_density <- ggplot(my_2017, aes(x = danceability,  fill = "#99CCFF")) + 
-  geom_density(alpha = 1) +
-  scale_x_continuous(breaks = seq(min(0), max(1), by = 0.1))
-my_dance_density
+ggplot(out_df, aes(x=energy, color=owner)) +
+  geom_density() + 
+  ggtitle("Density plots of energy metric") +
+  theme_minimal()
 ```
 
-Okay so that doesn't look great so I think I will just make a density curve graph to compare all of our playlists. The code below gets everyone else's playlists. 
+We then dive into the energy variable. From the density plot, we see the distribution of energy across each person's playlist. There are several interesting observations. Everyone's distribution appears to be unimodal except for Kelly's, indicating that Kelly might like to listen to a wider range of music while everyone else prefers a particular type of music. In addition, Danielle, Hammand, and Lea's energy distributions are all skewed to the left, showing that they all prefer to listen to music with relatively higher energy. 
 
 ```{r}
-danielle <- get_playlist_audio_features('danielle219', '37i9dQZF1E9Lke9WJ01eT7')
-hammaad <- get_playlist_audio_features('1256140081', '37i9dQZF1E9ECwVUJQFrgP')
-kelly <- get_playlist_audio_features('22ugjl3xvvzgwtbwi3ubpt72a', '37i9dQZF1E9VRPVezelVUk')
+artist_top_genres <- NULL
+
+for (i in 1: nrow(out_df)){
+  if (is.null(out_df$artist_genres[[i]][1])){
+    artist_top_genres <- rbind(artist_top_genres, "N/A")
+  }
+  
+  else{
+    artist_top_genres <- rbind(artist_top_genres,  out_df$artist_genres[[i]][1])
+  }
+  
+}
+
+out_df$artist_top_genre <- as.factor(as.vector(artist_top_genres))
+
+grouped_owner_genre <- out_df %>% group_by(artist_top_genre, owner) %>% 
+  summarise(n=n())
+top_genres <- (grouped_owner_genre %>% filter(n>12))$artist_top_genre
+
+ggplot(out_df %>% filter(artist_top_genre %in% top_genres) %>% 
+         filter(artist_top_genre != "N/A"), aes(x=energy, color=owner)) +
+  geom_density() + 
+  ggtitle("Density plots of energy metric by artist genre") +
+  theme_minimal()+
+  facet_grid(. ~ artist_top_genre)
+
 ```
+
+We are curious about if genre of music contributes to the energy variable. Intuitively, certain genres such as electric dance music (edm) would have higher energy than acoustic music. We then plotted density plots by the top 4 genres of all the songs (note: each song can belong to multiple genres, but here we only look at the first genre of each song's genre list). We observe that except for dance pop, only two owners listen to each genre. In particular, Lea likes to listen to high energy music from alternative dance and edm, while hammand likes to listen to high energy music from dance pop. These density plots provide us with a more comprehensive view of how the energy variable distributes across genres. 
 
 ```{r}
-my_2017$user_id <- 'lea'
-hammaad$user_id <- 'hammaad'
-kelly$user_id <- 'kelly'
-danielle$user_id <- 'danielle'
-all <- rbind(my_2017, hammaad)
-all <- rbind(all, kelly)
-all <- rbind(all, danielle)
+
+energy_by_artist <- out_df %>% group_by(artist_name, owner) %>% 
+  summarise(n=n(), mean_energy = mean(energy)) %>% arrange(-n) 
+
+ggplot(energy_by_artist %>% filter(n>=3), 
+       aes(x=artist_name, y=mean_energy, color = owner)) +
+  geom_col(fill="white") + 
+  ggtitle("Which artists have the most energetic songs?") +
+  theme_minimal()+
+  facet_wrap(~owner)+
+  theme(axis.text.x = element_text(size = 5, angle = 45, hjust = 1))
+
 ```
 
-To compare everyone's distribution of danceability in their top 2017 songs, I will make a faceted histogram, a density curve and a boxplot graph. I'll decide later which one I think is best. 
-
-```{r}
-all$user_id <- as.factor(all$user_id)
-all_danceability_density <- ggplot(all, aes(x = danceability, fill = user_id)) +
-  geom_density(alpha = 0.3) +
-  scale_x_continuous(breaks = seq(min(0), max(1), by = 0.1))
-all_danceability_density
-```
-
-```{r}
-all_box <- ggplot(all, aes(x = user_id, y = danceability)) +
-  geom_boxplot()
-all_box
-```
-
-```{r}
-all_hist <-ggplot(all, aes(x=danceability))+
-  geom_histogram(color="blue", fill="#99CCFF", bins = 20)+
-  scale_x_continuous(breaks = seq(min(0), max(1), by = 0.1)) +
-  facet_grid(user_id ~ .) 
-all_hist
-```
-
-Quick instinct: boxplot is easiest to read in this case
+After we looked at the genres of music, we wonder that if someone listens to music that has high energy, does it mean all his/her songs have high energy? How is the energy variable distributed across everyone's favorite artists? We calculated the average energy of each artist and plotted the energy values of artists that have at least 3 songs in our overall playlist data. Since people can listen to vastly different artists, there might not be much overlap among the owners. However, from the histograms above, we see that Danielle and Lea's favorite artists have relatively similar energy level while Kelly and Hammand favorite artists have relatively different energy level. This observation helps us to learn about everyone's music preference, variety and patterns. 
