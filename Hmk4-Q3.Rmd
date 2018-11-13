@@ -9,10 +9,10 @@ In this final project, my group and I will be looking at Spotify data provided b
 
 For this project, we will be using the Spotify API and the R package for it, Spotifyr. Note that we are using the dev version of this package, not the CRAN version. 
 
-```{r, include = FALSE, cache = TRUE}
+```{r, include = FALSE}
 library(spotifyr)
-Sys.setenv(SPOTIFY_CLIENT_ID = 'b273df75336c485596266c68d3e7c1c2')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = 'e88980163181450eb429c2f3f4723f90')
+Sys.setenv(SPOTIFY_CLIENT_ID = '')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '')
 
 access_token <- get_spotify_access_token()
 ```
@@ -21,11 +21,10 @@ For this assignment, I will be looking at the danceability of mine and my group'
 
 The very first step is to load the playlist from my Spotify account and get the audio features. That is what the following code chunk accomplishes. 
 
-```{r, cache = TRUE}
-library(tidyverse)
+```{r}
+library(ggplot2)
 playlists <- get_user_playlists('leac750')
 my_2017 <- playlists[which(playlists$playlist_name == 'Your Top Songs 2017'),]
-# my_2017 <- get_playlist_tracks(my_2017)
 my_2017 <- get_playlist_audio_features('leac750', my_2017$playlist_uri)
 ```
 
@@ -77,8 +76,9 @@ all_danceability_density
 ```
 
 ```{r}
+# REORDER BY MEDIAN
 all_box <- ggplot(all, aes(x = user_id, y = danceability)) +
-  geom_boxplot()
+  geom_boxplot(fill='#99CCFF', color="black")
 all_box
 ```
 
@@ -90,4 +90,59 @@ all_hist <-ggplot(all, aes(x=danceability))+
 all_hist
 ```
 
-Quick instinct: boxplot is easiest to read in this case
+Quick instinct: boxplot is easiest to read in this case.
+
+Now I want to look at the relation of danceability to other continuous variables in the dataset. Initial variables that seem interesting to look at in their relationship to danceability is: track_popularity, energy, loudness, speechiness, acousticness, liveness, valence, tempo and duration. I don't want to make a scatterplot matrix because I want to really focus on danceability so I'll use the ggarrange() function from the **ggpubr** package.
+
+Before plotting, I'm just going to normalize every category that is not already between 0 and 1.
+
+```{r}
+x <- all$loudness
+all$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+all$normalized_pop <- all$track_popularity/100
+x <- all$tempo
+all$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- all$duration_ms
+all$normalized_duration <- (x-min(x))/(max(x)-min(x))
+```
+
+```{r}
+dance_loudness <- ggplot(all, aes(x = normalized_loudness, y = danceability)) + geom_point() + theme_classic()
+dance_pop <- ggplot(all, aes(x = normalized_pop, y = danceability)) + geom_point() + theme_classic()
+dance_speech <- ggplot(all, aes(x = speechiness, y = danceability)) + geom_point() + theme_classic()
+dance_valence <- ggplot(all, aes(x = valence, y = danceability)) + geom_point() + theme_classic()
+dance_acoustic <- ggplot(all, aes(x = acousticness, y = danceability)) + geom_point() + theme_classic()
+dance_live <- ggplot(all, aes(x = liveness, y = danceability)) + geom_point() + theme_classic()
+dance_tempo <- ggplot(all, aes(x = normalized_tempo, y = danceability)) + geom_point() + theme_classic()
+dance_energy <- ggplot(all, aes(x = energy, y = danceability)) + geom_point() + theme_classic()
+dance_duration <- ggplot(all, aes(x = normalized_duration, y = danceability)) + geom_point() + theme_classic()
+```
+
+```{r, fig.height = 12, fig.width = 20}
+library(ggpubr)
+ggarrange(dance_valence, dance_loudness, dance_pop, dance_acoustic, dance_energy, dance_tempo, dance_live, dance_speech, dance_duration + rremove("x.text"),
+          ncol = 3, nrow = 3)
+```
+
+It seems that there is no strong correlation between danceability and any of the variables explored. There is a slight positive correlation between danceability and valence. For fun, let's look at a scatterplot of valence for each person in my group.  
+
+```{r}
+lea_valence <- ggplot(my_2017, aes(x = valence, y = danceability)) + geom_point() + theme_classic()
+kelly_valence <- ggplot(kelly, aes(x = valence, y = danceability)) + geom_point() + theme_classic()
+hammaad_valence <- ggplot(hammaad, aes(x = valence, y = danceability)) + geom_point() + theme_classic()
+danielle_valence <- ggplot(danielle, aes(x = valence, y = danceability)) + geom_point() + theme_classic()
+ggarrange(lea_valence, kelly_valence, danielle_valence, hammaad_valence + rremove("x.text"),
+             labels = c("Lea", "Kelly", "Danielle", "Hammaad"),
+          ncol = 2, nrow = 2)
+```
+
+They actually all look fairly positively correlated so let's just look at the correlation coefficients between valence and danceability for each person. 
+
+```{r}
+cor(my_2017$valence, my_2017$danceability)
+cor(kelly$valence, kelly$danceability)
+cor(danielle$valence, danielle$danceability)
+cor(hammaad$valence, hammaad$danceability)
+```
+
+Kelly and my song's have decent correlation between danceability and valence whereas Hammaad and Danielle's songs really don't have much. Interesting to note!
