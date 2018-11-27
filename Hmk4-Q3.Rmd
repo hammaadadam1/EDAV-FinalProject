@@ -5,9 +5,9 @@ date: "November 14, 2018"
 output: pdf_document
 ---
 
-In this final project, my group and I will be looking at Spotify data provided by the students in EDAV. We thought it would be interesting to look at the music tastes of our class. We will specifically be looking at the playlists automatically created by Spotify last year at the end of 2017 entitled 'Your Top Songs 2017'. This is a playlist that Spotify automatically created of the 100 most played songs for each of its users in the year 2017. This seems like it will be a pretty good indicator of people's personal music tastes...or at least a look into how their 2017 was. 
+In this final project, my group and I will be looking at Spotify data provided by the students in EDAV. We thought it would be interesting to look at the music tastes of our class. We will specifically be looking at the playlists automatically created by Spotify last year entitled 'Your Top Songs 2017'. This is a playlist that Spotify automatically created of the 100 most played songs for each of its users in the year 2017 (specifically between January 1st and November 1st, according to Spotify). This seems like it will be a pretty good indicator of people's personal music tastes...or at least a look into how their 2017 was. 
 
-For this project, we will be using the Spotify API and the R package for it, Spotifyr. Note that we are using the dev version of this package, not the CRAN version. 
+For this project, we will be using the Spotify API and the R package for it, **Spotifyr**. Note that we are using the dev version of this package, not the CRAN version. 
 
 ```{r, include = FALSE}
 library(spotifyr)
@@ -17,9 +17,9 @@ Sys.setenv(SPOTIFY_CLIENT_SECRET = '')
 access_token <- get_spotify_access_token()
 ```
 
-For this assignment, I will be looking at the danceability of mine and my group's "Your Top Songs 2017". I am hoping that along the way I will gain interesting insights about how this track feature is related to other variables as well as how it is distributed across my group members. 
+For this assignment, I will be looking at the danceability of mine and my group's 'Your Top Songs 2017'. I am hoping that along the way, I will gain interesting insights about how this track feature is related to other variables as well as how it is distributed across my group members. 
 
-The very first step is to load the playlist from my Spotify account and get the audio features. That is what the following code chunk accomplishes. 
+The very first step is to load the playlist from my Spotify account and get the audio features, which is what the following code chunk accomplishes.  
 
 ```{r}
 library(ggplot2)
@@ -28,7 +28,7 @@ my_2017 <- playlists[which(playlists$playlist_name == 'Your Top Songs 2017'),]
 my_2017 <- get_playlist_audio_features('leac750', my_2017$playlist_uri)
 ```
 
-Danceability is a continous variable between 0 and 1 so it seems reasonable to start with a histogram as a first visualization. Note that the below histogram will only show the danceability of songs within my playlist. I've played around a bit with the number of bins to be able to see the main patterns without getting too caught in capturing every minute detail.
+Danceability is a continous variable between 0 and 1 so it seems reasonable to start with a histogram as a first visualization. Note that the below histogram will only show the danceability of songs within my playlist. I've played around a bit with the number of bins to be able to see the main patterns without getting too caught up in capturing every minute detail.
 
 ```{r}
 my_dance_hist <- ggplot(my_2017, aes(x = danceability)) +
@@ -38,24 +38,18 @@ my_dance_hist <- ggplot(my_2017, aes(x = danceability)) +
 my_dance_hist
 ```
 
-There are definitely two modes here, one at ~0.65 danceability and one at ~0.75. What is clear is that there are a higher number of songs that have at least 0.5 danceability or higher in my playlist (I am not surprised by this). I will also look at a density curve of this variable for my playlist simply because it was a bit hard to choose the number of bins that was appropriate and the density curve allows us to circumvent this issue. I think I will also make density curve graphs for my group members' playlists as well to more easily compare the danceability between our playlists. 
+There are definitely two modes here, one at ~0.65 danceability and one at ~0.75. What is clear is that there are a higher number of songs that have at least 0.5 danceability or higher in my playlist, which I am not too surprised by when looking at the kinds of songs in my playlist. Once we have collected the playlist data for all of our classmates that fill out our survey, I will make another histogram of danceability to look at the entire class' distribution for this variable. This graph specifically leads to me to ask the question: what genres are most popular within my playlist? Are they genres that you would think are very 'danceable', such as pop, hip hop, etc.? This is something I will look into more over the course of the project.
 
-```{r}
-my_dance_density <- ggplot(my_2017, aes(x = danceability,  fill = "#99CCFF")) + 
-  geom_density(alpha = 1) +
-  scale_x_continuous(breaks = seq(min(0), max(1), by = 0.1))
-my_dance_density
-```
+Next, I want to get the playlists of my group members so that I can compare how 'danceable' our playlists are. 
 
-Okay so that doesn't look great so I think I will just make a density curve graph to compare all of our playlists. The code below gets everyone else's playlists. 
 
 ```{r}
 danielle <- get_playlist_audio_features('danielle219', '37i9dQZF1E9Lke9WJ01eT7')
 hammaad <- get_playlist_audio_features('1256140081', '37i9dQZF1E9ECwVUJQFrgP')
 kelly <- get_playlist_audio_features('22ugjl3xvvzgwtbwi3ubpt72a', '37i9dQZF1E9VRPVezelVUk')
-```
 
-```{r}
+# adding a user id (name)
+# will make this a loop once we've collected everyone's data
 my_2017$user_id <- 'lea'
 hammaad$user_id <- 'hammaad'
 kelly$user_id <- 'kelly'
@@ -65,36 +59,32 @@ all <- rbind(all, kelly)
 all <- rbind(all, danielle)
 ```
 
-To compare everyone's distribution of danceability in their top 2017 songs, I will make a faceted histogram, a density curve and a boxplot graph. I'll decide later which one I think is best. 
 
 ```{r}
-all$user_id <- as.factor(all$user_id)
-all_danceability_density <- ggplot(all, aes(x = danceability, fill = user_id)) +
-  geom_density(alpha = 0.3) +
-  scale_x_continuous(breaks = seq(min(0), max(1), by = 0.1))
-all_danceability_density
+library(ggridges)
+all_ridges <- ggplot(all, aes(x = danceability, y = user_id)) + 
+  geom_density_ridges2(scale = 2, fill = "#99CCFF") +
+  theme_ridges() +
+  scale_x_continuous(breaks = seq(min(0), max(1), by = 0.1)) +
+  ylab("User") +
+  ggtitle("Hammaad Has Broad Taste")
+all_ridges
 ```
 
 ```{r}
-# REORDER BY MEDIAN
-all_box <- ggplot(all, aes(x = user_id, y = danceability)) +
-  geom_boxplot(fill='#99CCFF', color="black")
+all_box <- ggplot(all, aes(x = reorder(user_id, danceability, FUN = median), y = danceability)) +
+  geom_boxplot(fill='#99CCFF', color="black") +
+  geom_hline(yintercept = median(all$danceability), color = "black", alpha = 0.4) +
+  ylab("User") + xlab("danceability") +
+  ggtitle("Danielle Doesn't Dance Like the Rest of Us")
 all_box
 ```
 
-```{r}
-all_hist <-ggplot(all, aes(x=danceability))+
-  geom_histogram(color="blue", fill="#99CCFF", bins = 20)+
-  scale_x_continuous(breaks = seq(min(0), max(1), by = 0.1)) +
-  facet_grid(user_id ~ .) 
-all_hist
-```
-
-Quick instinct: boxplot is easiest to read in this case.
+There are two interesting things we see from these two plots. From the ridgeline plot, we see that everyone has at least one notcieable mode except for Hammaad. Hammaad has a wide range of danceable music, which is further signified by the fact that he has the highest interquartile range, as seen in the boxplot. We also see from the boxplot that Danielle clear listens to the least danceable music between our group members. Interestingly enough though, she also has the widest range of danceability in her playlist. Kelly, Hammmaad and I have very similar medians for danceability. This brings up the question of how different some of the other variables are between our playlists: such as valence and energy. It also begs the question of what different genres we each are listening to and again if these genres are strongly related to danceability.
 
 Now I want to look at the relation of danceability to other continuous variables in the dataset. Initial variables that seem interesting to look at in their relationship to danceability is: track_popularity, energy, loudness, speechiness, acousticness, liveness, valence, tempo and duration. I don't want to make a scatterplot matrix because I want to really focus on danceability so I'll use the ggarrange() function from the **ggpubr** package.
 
-Before plotting, I'm just going to normalize every category that is not already between 0 and 1.
+Before plotting, I'm just going to rescale every category that is not already between 0 and 1.
 
 ```{r}
 x <- all$loudness
@@ -107,24 +97,25 @@ all$normalized_duration <- (x-min(x))/(max(x)-min(x))
 ```
 
 ```{r}
-dance_loudness <- ggplot(all, aes(x = normalized_loudness, y = danceability)) + geom_point() + theme_classic()
-dance_pop <- ggplot(all, aes(x = normalized_pop, y = danceability)) + geom_point() + theme_classic()
-dance_speech <- ggplot(all, aes(x = speechiness, y = danceability)) + geom_point() + theme_classic()
-dance_valence <- ggplot(all, aes(x = valence, y = danceability)) + geom_point() + theme_classic()
-dance_acoustic <- ggplot(all, aes(x = acousticness, y = danceability)) + geom_point() + theme_classic()
-dance_live <- ggplot(all, aes(x = liveness, y = danceability)) + geom_point() + theme_classic()
-dance_tempo <- ggplot(all, aes(x = normalized_tempo, y = danceability)) + geom_point() + theme_classic()
-dance_energy <- ggplot(all, aes(x = energy, y = danceability)) + geom_point() + theme_classic()
-dance_duration <- ggplot(all, aes(x = normalized_duration, y = danceability)) + geom_point() + theme_classic()
+# making each graph to then be put in ggarrange
+dance_loudness <- ggplot(all, aes(x = normalized_loudness, y = danceability)) + geom_point() + theme_classic(base_size = 24) + xlab("loudness")
+dance_pop <- ggplot(all, aes(x = normalized_pop, y = danceability)) + geom_point() + theme_classic(base_size = 24) + xlab("track popularity")
+dance_speech <- ggplot(all, aes(x = speechiness, y = danceability)) + geom_point() + theme_classic(base_size = 24)
+dance_valence <- ggplot(all, aes(x = valence, y = danceability)) + geom_point() + theme_classic(base_size = 24)
+dance_acoustic <- ggplot(all, aes(x = acousticness, y = danceability)) + geom_point() + theme_classic(base_size = 24)
+dance_live <- ggplot(all, aes(x = liveness, y = danceability)) + geom_point() + theme_classic(base_size = 24)
+dance_tempo <- ggplot(all, aes(x = normalized_tempo, y = danceability)) + geom_point() + theme_classic(base_size = 24) + xlab("tempo")
+dance_energy <- ggplot(all, aes(x = energy, y = danceability)) + geom_point() + theme_classic(base_size = 24)
+dance_duration <- ggplot(all, aes(x = normalized_duration, y = danceability)) + geom_point() + theme_classic(base_size = 24) + xlab("duration")
 ```
 
-```{r, fig.height = 12, fig.width = 20}
+```{r, fig.height = 12, fig.width = 22}
 library(ggpubr)
 ggarrange(dance_valence, dance_loudness, dance_pop, dance_acoustic, dance_energy, dance_tempo, dance_live, dance_speech, dance_duration + rremove("x.text"),
           ncol = 3, nrow = 3)
 ```
 
-It seems that there is no strong correlation between danceability and any of the variables explored. There is a slight positive correlation between danceability and valence. For fun, let's look at a scatterplot of valence for each person in my group.  
+It seems that there is no strong correlation between danceability and any of the variables explored. There is a slight positive correlation between danceability and valence. These graphs really beg the main question: what goes into determining danceability? This answer is somewhat explained in the documentation of Spotify's API, but it would nice to be able to relate danceability to another feature given by the API, and to visualize it. For fun, let's look at a scatterplot of valence for each person in my group.
 
 ```{r}
 lea_valence <- ggplot(my_2017, aes(x = valence, y = danceability)) + geom_point() + theme_classic()
@@ -145,4 +136,4 @@ cor(danielle$valence, danielle$danceability)
 cor(hammaad$valence, hammaad$danceability)
 ```
 
-Kelly and my song's have decent correlation between danceability and valence whereas Hammaad and Danielle's songs really don't have much. Interesting to note!
+Kelly and my song's have decent correlation between danceability and valence whereas Hammaad and Danielle's songs really don't have much. Interesting to note! It will also be interesting to see if this correlation gets any higher or lower after we have collected more data from our classmates.
