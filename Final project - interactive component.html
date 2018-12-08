@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Final project - interactive component</title>
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+
+	</head>
+
+	<style>
+		body {
+	   		background-color: pink;
+	   		font-family: Arial, Helvetica, sans-serif; 	
+
+		}
+
+		.dropdown select option[disabled]{
+  			display: none; 
+		}
+
+
+	</style>
+	<body>
+
+	 	<h1> DSI 2017 Playlist: Let's play! <h2>
+
+
+	 	<h2>Rules</h2>
+
+	 	<p>
+	 	We made a Spotify playlist of the top 10 DSI songs from people's 2017 Top 100 playlists. We analyzed 8 audio features of all the songs, and now it's your chance to learn about those features by listening to the songs and guessing the values of the audio features!
+	 	</p>
+
+	 	<ul>
+		 	<li> Step1: Pick a song and play.
+		 	</li>
+
+		 	<li> Step2: Select the song you picked. 
+	 		</li>
+
+	 		<li> Step3: Venture a guess! 
+		 	</li>
+
+
+	 	</ul>
+
+	 
+
+	  <h2>Description of Audio features</h2>
+
+	 <div class="features">
+	  
+	 <ul>
+	 	<li> Danceability: Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity.
+	 	</li>
+
+	 	<li> Energy: Energy represents a perceptual measure of intensity and activity.
+	 	</li>
+
+	 	<li> Loudness: Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typical range between -60 and 0 db.
+	 	</li>
+
+	 	<li> Valence: Valence describes the musical positiveness conveyed by a track. 
+	 	</li>
+
+	 	<li> Tempo: Tempo represents the overall estimated tempo of a track in beats per minute (BPM).
+	 	</li>
+
+	 	<li> Acousticness: Acousticness is a confidence measure of whether the track is acoustic.
+	 	</li>
+
+	 	<li> Speechiness: Speechiness detects the presence of spoken words in a track. 
+	 	</li>
+
+	 	<li> Instrumentalness: Instrumentalness predicts whether a track contains no vocals.
+	 	</li>
+
+	 </ul>
+
+	</div>
+
+		<h3>Step1: Pick a song and play.</h3>
+
+		<iframe src="https://open.spotify.com/embed/user/22ugjl3xvvzgwtbwi3ubpt72a/playlist/1rm6N5GtJXKIsPk5H3fcoN" width="500" height="500" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+
+		<h3>Step2: Select the song you picked.</h3>
+
+
+	<div class = "dropdown">
+
+	<select id= "selected">
+                                              
+  		<option name= "song" value="humble">HUMBLE</option>
+  		<option name= "song" value="shape of you">Shape of You</option>
+  		<option name= "song" value="starboy">Starboy</option>
+  		<option name= "song" value="another day of sun">Another Day Of Sun - From "La La Land" Soundtrack</option>
+  		<option name= "song" value="bad and boujee">Bad and Boujee (feat. Lil Uzi Vert) </option>
+  		<option name= "song" value="despacito">Despacito - Remix </option>
+  		<option name= "song" value="paris">Paris</option>
+  		<option name= "song" value="slide">Slide (feat. Frank Ocean & Migos)</option>
+  		<option name= "song" value="bounceback">Bounce Back</option>
+  		<option name= "song" value="broccoli">Broccoli</option>
+
+	</select>
+
+	</div>
+
+	<h3>Step3: Venture a guess!  </h3>
+
+	<p class = "danceability"> What is the value of danceability? </p>
+
+	<div class = "danceability_buttons">
+	<form action="">
+  		<input type="radio" name="button" value="true"> 0.907 
+  		<input type="radio" name="button" value="false"> 0.28
+  		<input type="radio" name="button" value="false"> 0.67
+ 
+	</form>
+
+
+	</div>
+
+	<p id="test">test field text</p>
+
+
+
+		<svg>  
+
+	  	</svg>
+	  
+		<script type="text/javascript">
+
+
+			var song_value = "";
+		
+			//get the value of the dropdown list
+
+			d3.select("select").on("change", function(){
+    			song_value = d3.select("#selected").node().value;
+    			//for testing
+    			console.log(song_value);
+    			d3.select("#test").text(song_value);
+
+
+			});
+
+			//order of features
+
+			//danceability, energy, loudness, valence, tempo, acousticness, speechiness, instrumentalness
+
+			//features of the top 10 songs
+
+			var humble = [0.907, 0.591, -7.507, 0.418, 149.992, 0.000359, 0.1050, 2.81e-05]
+			var shape_of_you = [0.825, 0.652, -3.183, 0.931, 95.977, 0.581000, 0.0802, 0.00e+00]
+			var star_boy = [0.678, 0.588, -7.015, 0.486, 186.005, 0.141000, 0.2760, 6.35e-06]
+			var another_day_of_sun =[0.588, 0.742, -6.757, 0.824, 125.819, 0.016200, 0.0528, 3.98e-06]
+			var bad_and_boujee = [0.927, 0.665, -5.313, 0.175, 127.076, 0.061000, 0.2440, 0.00e+00]
+			var despacito = [0.694, 0.815, -4.328, 0.813, 88.931, 0.229000, 0.1200, 0.00e+00]
+			var paris = [0.646, 0.644, -6.763, 0.251, 99.999, 0.024300, 0.0310, 0.00e+00]
+			var slide = [0.736,	0.795, -3.299,	0.511, 104.066, 0.498000, 0.0545, 1.21e-06]
+			var bounce_back = [0.788, 0.516, -6.807, 0.235, 81.497, 0.100000, 0.2190, 0.00e+00]
+			var broccoli = [0.886, 0.525, -7.390, 0.708, 145.990, 0.236000, 0.1320, 0.00e+00]
+
+
+			if (song_value == "humble"){
+				d3.select("#test").text("humble");
+
+			}
+
+
+
+		
+			
+		 
+
+
+
+
+		</script>
+	</body>
+</html>
