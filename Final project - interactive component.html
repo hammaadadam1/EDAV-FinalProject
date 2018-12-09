@@ -9,8 +9,9 @@
 
 	<style>
 		body {
-	   		background-color: pink;
-	   		font-family: Arial, Helvetica, sans-serif; 	
+	   		
+	   		background: linear-gradient(to bottom right, #ccccff 3%, #ff99cc 94%);
+	   		font-family: 'Gotham', Gotham Medium, sans-serif; 	
 
 		}
 
@@ -22,25 +23,27 @@
 	</style>
 	<body>
 
-	 	<h1> DSI 2017 Playlist: Let's play! <h2>
+	 	<h1 > How well do <i>you</i> know DSI's favorite songs? <h2>
 
 
 	 	<h2>Rules</h2>
 
 	 	<p>
-	 	We made a Spotify playlist of the top 10 DSI songs from people's 2017 Top 100 playlists. We analyzed 8 audio features of all the songs, and now it's your chance to learn about those features by listening to the songs and guessing the values of the audio features!
+	 	We made a Spotify playlist of the DSI's favorite songs from 2017 and analyzed 8 audio features. Now it's your turn to learn about these features by listening to the songs and guessing the values!
 	 	</p>
 
 	 	<ul>
-		 	<li> Step1: Pick a song and play.
+		 	<li> Step 1: Pick a song to listen to.
 		 	</li>
 
-		 	<li> Step2: Select the song you picked. 
+		 	<li> Step 2: Select the song you picked. 
 	 		</li>
 
-	 		<li> Step3: Venture a guess! 
+	 		<li> Step 3: Venture a guess!
 		 	</li>
 
+		 	<li> Step 4: See how close you were to the actual answer and how that song compares to the averages over all DSI songs.
+		 	</li>
 
 	 	</ul>
 
@@ -49,41 +52,41 @@
 	  <h2>Description of Audio features</h2>
 
 	 <div class="features">
-	  
+
 	 <ul>
-	 	<li> Danceability: Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity.
+	 	<li> Danceability: Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. Values range from 0.0 to 1.0, with 1.0 being the most danceable.
 	 	</li>
 
-	 	<li> Energy: Energy represents a perceptual measure of intensity and activity.
+	 	<li> Energy: Energy represents a perceptual measure of intensity and activity. Values range from 0.0 to 1.0, with 1.0 being the highest energy.
 	 	</li>
 
-	 	<li> Loudness: Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typical range between -60 and 0 db.
+	 	<li> Loudness: Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values range between -60 and 0 db, with 0 being the loudest.
 	 	</li>
 
-	 	<li> Valence: Valence describes the musical positiveness conveyed by a track. 
+	 	<li> Valence: Valence describes the musical positiveness conveyed by a track. Values range from 0.0 to 1.0, with 1.0 being the most positive/happy/cheerful.
 	 	</li>
 
-	 	<li> Tempo: Tempo represents the overall estimated tempo of a track in beats per minute (BPM).
+	 	<li> Tempo: Tempo represents the overall estimated tempo of a track in beats per minute (BPM). Values typically range from 0 to 250 bpm.
 	 	</li>
 
-	 	<li> Acousticness: Acousticness is a confidence measure of whether the track is acoustic.
+	 	<li> Acousticness: Acousticness is a confidence measure of whether the track is acoustic. Values range from 0.0 to 1.0, with 1.0 being the most acoustic.
 	 	</li>
 
-	 	<li> Speechiness: Speechiness detects the presence of spoken words in a track. 
+	 	<li> Speechiness: Speechiness detects the presence of spoken words in a track. Values range from 0.0 to 1.0, with values above 0.66 describing tracks that are made entirely of spoken word and values below 0.33 representing all music.
 	 	</li>
 
-	 	<li> Instrumentalness: Instrumentalness predicts whether a track contains no vocals.
+	 	<li> Track_Popularity: Spotify's track popularity rating transformed from 0 to 100 to 0.0 to 1.0. 
 	 	</li>
 
 	 </ul>
 
 	</div>
 
-		<h3>Step1: Pick a song and play.</h3>
+		<h3>Step 1: Pick a song to play.</h3>
 
 		<iframe src="https://open.spotify.com/embed/user/22ugjl3xvvzgwtbwi3ubpt72a/playlist/1rm6N5GtJXKIsPk5H3fcoN" width="500" height="500" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
 
-		<h3>Step2: Select the song you picked.</h3>
+		<h3>Step 2: Select the song you picked.</h3>
 
 
 	<div class = "dropdown">
@@ -105,31 +108,9 @@
 
 	</div>
 
-	<h3>Step3: Venture a guess!  </h3>
+	<h3>Step 3: Venture a guess!  </h3>
 
-	<p class = "danceability"> What is the value of danceability? </p>
-
-	<div class = "danceability_buttons">
-	<form action="">
-  		<input type="radio" name="button" value="true"> 0.907 
-  		<input type="radio" name="button" value="false"> 0.28
-  		<input type="radio" name="button" value="false"> 0.67
- 
-	</form>
-
-
-	</div>
-
-	<p id="test">test field text</p>
-
-
-
-		<svg>  
-
-	  	</svg>
-	  
 		<script type="text/javascript">
-
 
 			var song_value = "";
 		
@@ -141,16 +122,23 @@
     			console.log(song_value);
     			d3.select("#test").text(song_value);
 
-
 			});
 
 			//order of features
 
-			//danceability, energy, loudness, valence, tempo, acousticness, speechiness, instrumentalness
+			//danceability, energy, loudness, valence, tempo, acousticness, speechiness, track_popularity
 
-			//features of the top 10 songs
+			//features of the top 10 songs --> MAKE THIS INTO DICTIONARY
 
-			var humble = [0.907, 0.591, -7.507, 0.418, 149.992, 0.000359, 0.1050, 2.81e-05]
+			var humble = [{key: 'Danceability', value:0.908}, 
+							{key: 'Energy', value:0.621},
+							{key: 'Loudness', value: 0.20097132}, 
+							{key: 'Valence', value:0.421}, 
+							{key: 'Tempo', value:0.6556520741}, 
+							{key: 'Acousticness', value:0.000282},
+							{key: 'Speechiness', value:0.1020}, 
+							{key: 'Track Popularity', value:0.97530864}];
+
 			var shape_of_you = [0.825, 0.652, -3.183, 0.931, 95.977, 0.581000, 0.0802, 0.00e+00]
 			var star_boy = [0.678, 0.588, -7.015, 0.486, 186.005, 0.141000, 0.2760, 6.35e-06]
 			var another_day_of_sun =[0.588, 0.742, -6.757, 0.824, 125.819, 0.016200, 0.0528, 3.98e-06]
@@ -164,18 +152,118 @@
 
 			if (song_value == "humble"){
 				d3.select("#test").text("humble");
-
 			}
 
 
+			//  Width and height of svg
+			var w = 700;
+			var h = 500;
+			var margin = {top: 25, right: 0, bottom: 25,
+      		left: 25};
+  			var innerWidth = w - margin.left - margin.right;
+  			var innerHeight = h - margin.top - margin.bottom;
 
+			// y-axis min / max
+		  	var ymin = 0.0;
+		  	var ymax = 1.0;
 		
+			//		Scale functions
+			var xScale = d3.scaleBand()
+				.domain(['Danceability', 'Energy', 'Loudness', 'Valence', 'Tempo', 'Acousticness', 'Speechiness', 'Track Popularity'])
+				.range([0, innerWidth])
+				.paddingInner(.1);
+
+			var yScale = d3.scaleLinear()
+				.domain([ymin, ymax])
+				.range([innerHeight, 0]);
 			
-		 
+			//    Define X axis and Y axis
+			var xAxis = d3.axisBottom()
+				.scale(xScale);
+
+			var yAxis = d3.axisLeft()
+				.scale(yScale);
+
+			//    Create SVG element		
+			var svg = d3.select("body")
+				.append("svg")
+				.attr("width", w)
+				.attr("height", h)
+
+			// svg.append("rect")
+			// 	.attr("x", 0)
+			// 	.attr("y", 0)
+			// 	.attr("width", w)
+			// 	.attr("height", h)
+			// 	.attr("fill", "white");				
+			
+			//    Create axes
+			svg.append("g")
+				.attr("class", "yAxis")
+				.attr("transform", `translate (${margin.left}, ${margin.top})`)
+				.call(yAxis.ticks(10));
+
+			svg.append("g")
+				.attr("class", "xAxis")
+				.attr("transform", `translate (${margin.left}, ${h - margin.bottom})`)
+				.call(xAxis);
+			
+			//	Create initial bars
+			var bardata = [{key: 'Danceability', value:.05}, 
+							{key: 'Energy', value:.05},
+							{key: 'Loudness', value: .05}, 
+							{key: 'Valence', value:.05}, 
+							{key: 'Tempo', value:.05}, 
+							{key: 'Acousticness', value:.05},
+							{key: 'Speechiness', value:.05}, 
+							{key: 'Track Popularity', value:.05}];
 
 
+			var bars = svg.append("g")
+				.attr("id", "plot")
+				.attr("transform", `translate (${margin.left}, ${margin.top})`)
+				.selectAll("rect")
+				.data(bardata, d => d.key);
 
+			bars.enter().append("rect")
+				.attr("x", d => xScale(d.key))
+				.attr("y", d => yScale(d.value))
+				.attr("width", xScale.bandwidth())
+				.attr("height", d => innerHeight - yScale(d.value))
+				.attr("fill", "purple")
+				.call(d3.drag()
+					.on("start", dragstart)
+					.on("drag", dragging)
+					.on("end", dragend));
+
+			function dragstart(d){
+				d3.select(this).raise().classed("active", true);
+			};
+
+			function dragging(d){
+				d3.select(this)
+					.attr("y", d.y = d3.event.y)
+					.attr("height", d => innerHeight - d3.event.y);
+			};
+
+			function dragend(d){
+				d3.select(this).classed("active", false);
+			};
+
+			//	This function isn't working right now, not selecting the bars, eventually it should add new bars with the actual values, was just using color to test the functionality of this
+			
+			function results(){
+				svg.select("g").attr("id", "plot").selectAll("rect")
+				.transition()
+				.style("fill", "blue");
+
+			}
 
 		</script>
+
+		<div class = "submit">
+	  		<input type="button" value="Submit" onclick="results()"/>
+
+		</div>
 	</body>
 </html>
