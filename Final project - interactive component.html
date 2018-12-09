@@ -17,6 +17,7 @@
 
 		}
 
+
 		.button{
 			background-color: #006666;
   			border: none;
@@ -37,7 +38,7 @@
   			text-align: center;
   			font-size: 16px;
 
-		}
+
 
 
 	</style>
@@ -62,6 +63,7 @@
 	 		<li> Step 3: Venture a guess!
 		 	</li>
 
+
 		 	Note : Once you submit your guess, you can see how close you were to the actual answers and how the audio features of that song compares to the median of that over all DSI songs.
 		 	
 
@@ -80,11 +82,13 @@
 	 	<li> Energy: Energy represents a perceptual measure of intensity and activity. Values range from 0.0 to 1.0, with 1.0 being the highest energy.
 	 	</li>
 
+
 	 	<li> Loudness: Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values range between -60 and 0 db, with 0 being the loudest. The values are normalized to 0.0 and 1.0, with 1.0 being the loudest. 
 	 	</li>
 
 	 	<li> Valence: Valence describes the musical positiveness conveyed by a track. Values range from 0.0 to 1.0, with 1.0 being the most positive/happy/cheerful.
 	 	</li>
+
 
 	 	<li> Tempo: Tempo represents the overall estimated tempo of a track in beats per minute (BPM). Values typically range from 0 to 250 bpm. The values are normalized to 0.0 and 1.0, with 1.0 being the highest tempo.
 	 	</li>
@@ -130,19 +134,17 @@
 
 	<h3>Step 3: Venture a guess!  </h3>
 
+
 		<p> After you listen to the song, you can drag each bar (feature) to the your guessed value. Once you finished dragging all the bars, click the "submit" button, and you will see the actual answers and the median audio feature values over all DSI songs. You can click "Play Again" to guess for another song! </p>
 
 		<script type="text/javascript">
 
 			var song_value = "";
+
 		
 			//get the value of the dropdown list
 			d3.select("select").on("change", function(){
     			song_value = d3.select("#selected").node().value;
-
-    			//for testing
-    			// console.log(song_value);
-    			
 
 			});
 
@@ -182,7 +184,7 @@
 							{key: 'Energy', value: 0.588}, 
 							{key: 'Loudness', value: 0.113783534}, 
 							{key: 'Valence', value: 0.486}, 
-							{key: 'Tempo', value: 10}, 
+							{key: 'Tempo', value: 1.0}, 
 							{key: 'Acousticness', value: 0.141}, 
 							{key: 'Speechiness', value: 0.276}, 
 							{key: 'Track Popularity', value: 0.962962963}];
@@ -249,6 +251,7 @@
 								{key: 'Acousticness', value: 0.138}, 
 								{key: 'Speechiness', value: 0.0493}, 
 								{key: 'Track Popularity', value: 0.52}];
+
 
 
 
@@ -434,9 +437,8 @@
 					.delay(5800)
 					.attr("fill-opacity", 1);
 
-			}
 
-			//	 Not done yet!
+			//	 restart 
 			function restart(){
 				svg.selectAll("rect").remove();
 				svg.selectAll("line").remove();
@@ -475,6 +477,5 @@
 	  		<input class = "button" type="button" value="Play Again" onclick="restart()"/>
 		</div>
 
-		<p></p>
 	</body>
 </html>
