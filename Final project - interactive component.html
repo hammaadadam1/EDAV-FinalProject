@@ -98,8 +98,8 @@
 
 	<select id= "selected">
                                               
-  		<option name= "song" value=humble>HUMBLE</option>
-  		<option name= "song" value="shape of you">Shape of You</option>
+  		<option name= "song" value="humble">HUMBLE</option>
+  		<option name= "song" value="shapeofyou">Shape of You</option>
   		<option name= "song" value="starboy">Starboy</option>
   		<option name= "song" value="another day of sun">Another Day Of Sun - From "La La Land" Soundtrack</option>
   		<option name= "song" value="bad and boujee">Bad and Boujee (feat. Lil Uzi Vert) </option>
@@ -120,9 +120,9 @@
 			var song_value = 'humble';
 		
 			//get the value of the dropdown list
-
 			d3.select("select").on("change", function(){
     			song_value = d3.select("#selected").node().value;
+
     			//for testing
     			console.log(song_value);
     			d3.select("#test").text(song_value);
@@ -234,9 +234,15 @@
 								{key: 'Track Popularity', value: 0.52}];
 
 
-			var resultdata = []
+			var resultdata = song_value
 			if (song_value == "humble"){
 				resultdata = humble;
+			}
+			if (song_value == "shape of you"){
+				resultdata = shapeofyou;
+			}
+			if (song_value == "starboy"){
+				resultdata = starboy;
 			}
 
 
@@ -407,8 +413,6 @@
 					.transition()
 					.delay(5800)
 					.attr("fill-opacity", 1);
-
-
 
 			}
 
