@@ -12,8 +12,8 @@ For this project, we will be using the Spotify API and the R package for it, Spo
 ```{r, include = FALSE}
 library(spotifyr)
 # input your own spotify client id and spotify client secret to be able to use Spotify's API
-Sys.setenv(SPOTIFY_CLIENT_ID = '')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = '')
+Sys.setenv(SPOTIFY_CLIENT_ID = 'b273df75336c485596266c68d3e7c1c2')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = 'e88980163181450eb429c2f3f4723f90')
 
 access_token <- get_spotify_access_token()
 ```
@@ -310,10 +310,16 @@ class_playlists <- rbind(class_playlists, danielle)
 write.csv(class_playlists, file = "ClassMusicData.csv")
 ```
 
+The data were all cleaned on Monday, 11/26
 Now that the data is cleaned up, I can perform a more extensive data analysis. I will probably start by looking at the danceability patterns for the whole data, as I did for the 4th assignment. I am then curious to find out what features the most popular artists have in common (if any). I am hoping to answer that question through visualizations.
 
+### New workflow starts here
+
 ```{r}
-class_data <- read_csv("classMusicData.csv", col_names = TRUE)
+setwd("~/Columbia/EDAV/FinalProject/EDAV-FinalProject")
+library(tidyverse)
+# this file include track genre and the student's name
+class_data <- read_csv("PlaylistNameGenre.csv", col_names = TRUE)
 ```
 
 #### Exploring Danceability
@@ -329,17 +335,64 @@ dance_hist
 The danceability histogram shows that the data is slightly left-skewed with only one mode around 0.65, so EDAV students enjoy some slightly 'dancier' music. Now let's make a ridgeplot just for fun to see how different people's danceability tastes are. To make it actually interesting to compare everyone's danceability, it would be nice to have everyone's names displayed (with their consent). The following code adds the person's name to the dataset.
 
 ```{r}
-class_names <- read_csv("Names.csv", col_names = TRUE)
-# get only the users that agreed to have their names displayed
-class_names <- class_names[which(class_names$`Display?` == 'Yes'),]
-
-class_data <- class_data %>% dplyr::inner_join(class_names, by = "user_id")
+# cleaning up the data a bit
 class_data$X1 <- NULL
+
+# MAKE THIS INTO A FUNCTION
+# normalizing all variables to be between 0 and 1
+x <- class_data$loudness
+class_data$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+class_data$normalized_pop <- class_data$track_popularity/100
+class_data$normalized_artist_pop <- class_data$artist_popularity/100
+x <- class_data$tempo
+class_data$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- class_data$instrumentalness 
+class_data$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+
+display_class_data <- class_data[which(class_data$`Display` == 'Yes'),]
+
+# selecting only the continuous variables from the dataset
+cont_var <- class_data %>% select(normalized_pop, danceability, energy, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, valence, normalized_tempo)
+
+names(cont_var) <- c("popularity", "dance", "energy", "loud", "speech", "acoustic", "instrumental", "valence", "tempo")
+```
+
+Make this into a Cleveland dotplot as well
+
+```{r}
+avg_class_data <- display_class_data %>% group_by(Name) %>% summarise_at(vars(normalized_artist_pop, normalized_pop, danceability, energy, valence, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, normalized_tempo), funs(mean(., na.rm = TRUE)))
+
+names(avg_class_data) <- c("Name", "Artist Popularity", "Track Popularity", "Danceability", "Energy", "Valence", "Loudness"," Speechiness", "Acousticness", "Instrumentalness", "Tempo")
+
+tidy_avg <- avg_class_data %>% select(Name, `Track Popularity`, `Artist Popularity`) %>% 
+  arrange(`Track Popularity`) %>% 
+  mutate(Name = factor(Name, levels = .$Name)) %>% tidyr::gather(key = 'Category', value = 'Percentage', -Name)
+
+pop_cd <- ggplot(tidy_avg, aes(x = Percentage, y = Name, color = Category)) +
+          geom_point() + ylab("") + theme_minimal() +
+          ggtitle("Hammaad and Lea Are Basic AF") +
+        scale_color_manual(values=c("red", "blue")) +
+    theme(legend.title=element_text(size=15), legend.text=element_text(size=13))
+pop_cd
+```
+
+Let's see who listens to the happiest music. And let's see if that has any relation to danceability since we see below that there's some correlation between the two. 
+
+```{r}
+tidy_avg <- avg_class_data %>% select(Name, Valence, Danceability) %>% 
+  arrange(Valence) %>% 
+  mutate(Name = factor(Name, levels = .$Name)) %>% tidyr::gather(key = 'Category', value = 'Percentage', -Name)
+
+pop_cd <- ggplot(tidy_avg, aes(x = Percentage, y = Name, color = Category)) +
+          geom_point() + ylab("") + theme_minimal() +
+        scale_color_manual(values=c("red", "blue")) +
+    theme(legend.title=element_text(size=15), legend.text=element_text(size=13))
+pop_cd
 ```
 
 ```{r}
 library(ggridges)
-all_ridges <- ggplot(class_data, aes(x = danceability, y = Name)) + 
+all_ridges <- ggplot(display_class_data, aes(x = danceability, y = reorder(Name, danceability, FUN = median))) + 
   geom_density_ridges2(scale = 2, fill = "#99CCFF") +
   theme_ridges() +
   scale_x_continuous(breaks = seq(min(0), max(1), by = 0.1)) +
@@ -351,31 +404,17 @@ Now that we have more songs to look at, let's look at the correlation between al
 
 ```{r}
 library(GGally)
-
-# normalizing all variables to be between 0 and 1
-x <- class_data$loudness
-class_data$normalized_loudness <- (x-min(x))/(max(x)-min(x))
-class_data$normalized_pop <- class_data$track_popularity/100
-x <- class_data$tempo
-class_data$normalized_tempo <- (x-min(x))/(max(x)-min(x))
-x <- class_data$instrumentalness 
-class_data$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
-
-# selecting only the continuous variables from the dataset
-cont_var <- class_data %>% select(normalized_pop, danceability, energy, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, valence, normalized_tempo)
-names(cont_var) <- c("popularity", "dance", "energy", "loud", "speech", "acoustic", "instrumental", "valence", "tempo")
-
 scatter_vars <- ggpairs(cont_var, title = "", axisLabels = "show", progress = FALSE)
 scatter_vars
 ```
 
 Many of the variables are uncorrelated or very weakly correlated. The strongest positive correlations are between energy and loudness (0.786), valence and energy (0.4), valence and danceability (0.395), and loudness and valence (0.323). It's interesting that track popularity is not really correlated with any of the variables (what other things could we look at that might be indicators of whether a track will be popular/how does Spotify calculate track popularity). What's interesting is that Spotify claims that it calculates danceability based on the tempo but not only is there almost no correlation between danceability and tempo, but there are even slightly negatively correlated! What's up with that?
 
-Now that we've looked a bit at how features relate to each other, I want to know a bit more about the most popular artists (popular amongst EDAV students), and see if these artists have any track features in common compared to other artists. I'll probably take a look at the top 10 artists and compare these features to the rest of the artists. We can similarly do something for the top 10 songs (and I probably will do so).
+Now that we've looked a bit at how features relate to each other, I want to know a bit more about the most popular artists (popular amongst EDAV students), and see if these artists have any track features in common compared to other artists. I'll probably take a look at the top 10 artists and compare these features to the rest of the artists. We can similarly do something for the top 10 songs (and I probably will do so). NOTE: should get the most popular artist by grouping by the user id and then counting how many times the artist shows up. 
 
 ```{r}
 top_ten_artists <- as.data.frame(rev(sort(table(class_data$artist_name)))[1:10])
-top_ten_songs <- as.data.frame(rev(sort(table(class_data$track_name)))[1:10])
+top_ten_songs <- as.data.frame(rev(sort(table(class_data$track_name)))[1:50])
 top_ten_artists$Var1 <- as.factor(top_ten_artists$Var1)
 top_ten_songs$Var1 <- as.factor(top_ten_songs$Var1)
 ```
@@ -391,7 +430,7 @@ artist_chart
 ```
 
 ```{r}
-song_chart <- ggplot(top_ten_songs, aes(reorder(Var1, -Freq), Freq)) +
+song_chart <- ggplot(top_ten_songs[1:10,], aes(reorder(Var1, -Freq), Freq)) +
   geom_bar(stat = 'identity', color="#3333FF", fill="#99CCFF", width = 0.90) + 
   xlab("Song Name") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   ggtitle("EDAV Stays HUMBLE.")
@@ -401,11 +440,21 @@ song_chart
 I think what will be easiest to be able to observe the differences between artists that are amongst the most popular and others is to make a new column that is just true or false based on if the artist is in the top 10 or not. I'll do the same thing for the top songs as well. 
 
 ```{r}
-class_data$`Is Most Popular Artist?` <- ifelse(class_data$artist_name %in% top_ten_artists$Var1, "Yes", "No")
-class_data$`Is Most Popular Song?` <- ifelse(class_data$track_name %in% top_ten_songs$Var1, "Yes", "No")
+class_data$`Artist Popularity` <- ifelse(class_data$artist_name %in% top_ten_artists$Var1, "EDAV Top 10", "EDAV Not Top 10")
+class_data$`Song Popularity` <- ifelse(class_data$track_name %in% top_ten_songs$Var1, "EDAV Top 50", "EDAV Not Top 50")
+
+edav_top_50_songs <- class_data[which(class_data$`Song Popularity` == 'EDAV Top 50'), ]
+edav_not_top_50_songs <- class_data[which(class_data$`Song Popularity` == 'EDAV Not Top 50'), ]
+edav_top_10_artists <- class_data[which(class_data$`Artist Popularity` == 'EDAV Top 10'), ]
+edav_not_top_10_artists <- class_data[which(class_data$`Artist Popularity` == 'EDAV Not Top 10'), ]
+
+edav_top_50_songs$playlist_name <- 'EDAV Top 50 Songs'
+edav_not_top_50_songs$playlist_name <- 'EDAV Not Top 50 Songs'
+edav_top_10_artists$playlist_name <- 'EDAV Top 10 Artists'
+edav_not_top_10_artists$playlist_name <- 'EDAV Not Top 10 Artists'
 ```
 
-To confirm popularity and maybe learn more about how Spotify assess track popularity, let's look at the difference between track populartiy amongst the most popular songs. We'll do this by making a density curve. First, what might be interesting is to see how the features of the most popular songs in EDAV compare to the features of the most popular songs on Spotify that are in the 'United States Top 50' or 'Global Top 50' for example. 
+To compare EDAV's tastes in 2017 to what's generally popular today, and was very popular in 2017, we will compare some features to Spotify's 'US Top 50', 'Global Top 50' and 'Top Tracks 2017' playlists.
 
 ```{r}
 us_top_50 <- get_playlist_audio_features('spotifycharts', '37i9dQZEVXbLRQDuF5jeBp')
@@ -414,17 +463,6 @@ top_2017 <- get_playlist_audio_features('spotify', '37i9dQZF1DX5nwnRMcdReF')
 ```
 
 ```{r}
-us_top_50$`Is Most Popular Song?` <- 'US Top 50'
-us_top_50$`Is Most Popular Artist?` <- 'US Top 50'
-us_top_50$Name <- 'USTop50'
-
-global_top_50$`Is Most Popular Song?` <- 'Global Top 50'
-global_top_50$`Is Most Popular Artist?` <- 'Global Top 50'
-global_top_50$Name <- 'GlobalTop50'
-
-top_2017$`Is Most Popular Song?` <- 'Top Tracks 2017'
-top_2017$`Is Most Popular Artist?` <- 'Top Tracks 2017'
-top_2017$Name <- 'TopTracks2017'
 
 # normalizing all variables to be between 0 and 1
 x <- us_top_50$loudness
@@ -452,73 +490,71 @@ x <- top_2017$instrumentalness
 top_2017$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
 ```
 
-We now need to combine all the data together. I'm just going to put it all in a new data frame since the top 50 charts won't have all the same columns and I want to keep the class data all together and consistent. 
+We now need to combine all the data together. I'm just going to put it all in a new data frame since the top 50 charts won't have all the same columns and I want to keep the class data all together and consistent. For now, I'll only be comparing features between the top 50 songs from EDAV and the Spotify playlists (ie. ignoring the less popular EDAV songs)
 
 ```{r}
-excluded_vars <- c('user_id', 'location2017', 'nationality', 'undergrad', 'age', 'useFrequency', 'Display?')
-sub_class <- select(class_data, -excluded_vars)
-all_data <- rbind(sub_class, us_top_50)
+excluded_vars <- c('gender', 'user_id', 'location2017', 'nationality', 'undergrad', 'age', 'useFrequency', 'Name', 'Display', 'artist_uri', 'artist_genres', 'Name', 'Artist Popularity', 'Song Popularity', 'artist_popularity', 'artist_num_followers', 'normalized_artist_pop')
+edav_top_50_songs <- select(edav_top_50_songs, -excluded_vars)
+edav_not_top_50_songs <- select(edav_not_top_50_songs, -excluded_vars)
+edav_top_10_artists <- select(edav_top_10_artists, -excluded_vars)
+edav_not_top_10_artists <- select(edav_not_top_10_artists, -excluded_vars)
+
+all_data <- rbind(edav_top_50_songs, us_top_50)
 all_data <- rbind(all_data, global_top_50)
 all_data <- rbind(all_data, top_2017)
 ```
 
 ```{r}
-diff_pop_songs <- ggplot(all_data, aes(x = track_popularity, fill = `Is Most Popular Song?`)) + 
+diff_pop_songs <- ggplot(all_data, aes(x = track_popularity, fill = playlist_name)) + 
   geom_density(alpha = 0.4) + xlab("Track Popularity")
 diff_pop_songs
 ```
 
 ```{r}
-diff_pop_artists <- ggplot(all_data, aes(x = track_popularity, fill = `Is Most Popular Artist?`)) + 
-  geom_density(alpha = 0.4) + xlab("Track Popularity")
-diff_pop_artists
-```
-
-
-```{r}
-diff_energy_songs <- ggplot(all_data, aes(x = energy, fill = `Is Most Popular Song?`)) + 
+diff_energy_songs <- ggplot(all_data, aes(x = energy, fill = playlist_name)) + 
   geom_density(alpha = 0.4) + xlab("Energy")
 diff_energy_songs
 ```
 
 ```{r}
-diff_dance_songs <- ggplot(all_data, aes(x = danceability, fill = `Is Most Popular Song?`)) + 
+diff_dance_songs <- ggplot(all_data, aes(x = danceability, fill = playlist_name)) + 
   geom_density(alpha = 0.4) + xlab("Danceability")
 diff_dance_songs
 ```
 
 ```{r}
-diff_loud_songs <- ggplot(all_data, aes(x = normalized_loudness, fill = `Is Most Popular Song?`)) +
+diff_loud_songs <- ggplot(all_data, aes(x = normalized_loudness, fill = playlist_name)) +
   geom_density(alpha = 0.4) + xlab("Loudness")
 diff_loud_songs
 ```
 
 ```{r}
-diff_speech_songs <- ggplot(all_data, aes(x = speechiness, fill = `Is Most Popular Song?`)) +
+diff_speech_songs <- ggplot(all_data, aes(x = speechiness, fill = playlist_name)) +
   geom_density(alpha = 0.4) + xlab("Speechiness")
 diff_speech_songs
 ```
 
 ```{r}
-diff_valence_songs <- ggplot(all_data, aes(x = valence, fill = `Is Most Popular Song?`)) +
+diff_valence_songs <- ggplot(all_data, aes(x = valence, fill = playlist_name)) +
   geom_density(alpha = 0.4) + xlab("Valence")
 diff_valence_songs
 ```
 
 ```{r}
-diff_acoustic_songs <- ggplot(all_data, aes(x = acousticness, fill = `Is Most Popular Song?`)) +
+diff_acoustic_songs <- ggplot(all_data, aes(x = acousticness, fill = playlist_name)) +
   geom_density(alpha = 0.4) + xlab("Acousticness")
 diff_acoustic_songs
 ```
 
 ```{r}
-diff_tempo_songs <- ggplot(all_data, aes(x = normalized_tempo, fill = `Is Most Popular Song?`)) +
+diff_tempo_songs <- ggplot(all_data, aes(x = normalized_tempo, fill = playlist_name)) +
   geom_density(alpha = 0.4) + xlab("Tempo")
 diff_tempo_songs
 ```
 
 ```{r}
-pop_ridges <- ggplot(all_data, aes(x = danceability, y = `Is Most Popular Song?`)) + 
+# I don't think I like this plot
+pop_ridges <- ggplot(all_data, aes(x = danceability, y = playlist_name)) + 
   geom_density_ridges2(scale = 2, fill = "#99CCFF") +
   theme_ridges() +
   scale_x_continuous(breaks = seq(min(0), max(1), by = 0.1)) 
@@ -526,3 +562,70 @@ pop_ridges
 ```
 
 Consider looking at more than the top 10 songs from the EDAV playlists, consider 50 to compare better to the Spotify playlists we're comparing to.
+
+Let's compare now just the popular songs and less popular songs within EDAV to compare their features. It seems that EDAV follows the general Spotify trends in terms of 'most popular' tastes. There's still a lot of songs to look at though and to compare.
+
+We'll look at all the continous variables again, but let's start with loudness since that was the one feature that was quite higher in EDAV's Top 50 compared to the songs in the Spotify-made playlists.
+
+```{r}
+edav_acoustic_songs <- ggplot(class_data, aes(x = normalized_loudness, fill = `Song Popularity`)) +
+  geom_density(alpha = 0.4) + xlab("Loudness")
+edav_acoustic_songs
+```
+
+Let's look at this as a boxplot just for fun. 
+```{r}
+all_data$`Song Popularity` <- as.factor(all_data$`Song Popularity`)
+loud_box <- ggplot(all_data, aes(x=`Song Popularity`, y=normalized_loudness)) + 
+  geom_boxplot() + 
+  geom_hline(yintercept = median(all_data$normalized_loudness), color = "black", alpha = 0.4) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab("Playlist") + ylab("Loudness")
+loud_box
+```
+
+```{r}
+all_data <- rbind(all_data, edav_not_top_50_songs)
+```
+
+When showing all 5 'playlists', it's actually nicer as a boxplot as it's quite a bit easier to read. 
+
+```{r, fig.width = 10, fig.height = 8}
+edav_loud_box <- ggplot(all_data, aes(x=reorder(playlist_name, -1*normalized_loudness, FUN=median), y=normalized_loudness)) + 
+  geom_boxplot(fill='#CCCCFF') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ggtitle("EDAV, Keep It Down") +
+  xlab("Playlist") + ylab("Loudness") + 
+  theme_minimal(16) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+edav_loud_box
+```
+
+```{r}
+edav_tempo_box <- ggplot(all_data, aes(x = reorder(playlist_name, -1*normalized_tempo, FUN = median), y = normalized_tempo)) +
+  geom_boxplot(fill='#FF9966') + 
+  geom_hline(yintercept = median(all_data$normalized_tempo), color = "black", alpha = 0.4) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab("Playlist") + ylab("Tempo")
+edav_tempo_box
+```
+
+Drives the point home about tempo less than the density curve, above. 
+
+```{r}
+edav_valence_box <- ggplot(all_data, aes(x = reorder(playlist_name, -1*valence, FUN = median), y = valence)) +
+  geom_boxplot(fill='#FF9966') + 
+  geom_hline(yintercept = median(all_data$valence), color = "black", alpha = 0.4) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab("Playlist") + ylab("Valence")
+edav_valence_box
+```
+
+```{r}
+edav_energy_box <- ggplot(all_data, aes(x = reorder(playlist_name, -1*energy, FUN = median), y = energy)) +
+  geom_boxplot(fill='#FF9966') + 
+  geom_hline(yintercept = median(all_data$energy), color = "black", alpha = 0.4) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab("Playlist") + ylab("Energy")
+edav_energy_box
+```
