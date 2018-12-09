@@ -7,13 +7,18 @@
 
 	</head>
 
+
+
 	<style>
 		body {
-	   		
-	   		background: linear-gradient(to bottom right, #ccccff 3%, #ff99cc 94%);
+	   		/*linear-gradient(to bottom right, #fa7268 3%, #66ccff 94%)*/
+	   		background: linear-gradient(to top left, #66ffff 5%, #ffffcc 89%);
 	   		font-family: 'Gotham', Gotham Medium, sans-serif; 	
 
 		}
+
+
+
 
 		.dropdown select option[disabled]{
   			display: none; 
@@ -93,7 +98,7 @@
 
 	<select id= "selected">
                                               
-  		<option name= "song" value="humble">HUMBLE</option>
+  		<option name= "song" value=humble>HUMBLE</option>
   		<option name= "song" value="shape of you">Shape of You</option>
   		<option name= "song" value="starboy">Starboy</option>
   		<option name= "song" value="another day of sun">Another Day Of Sun - From "La La Land" Soundtrack</option>
@@ -112,7 +117,7 @@
 
 		<script type="text/javascript">
 
-			var song_value = "";
+			var song_value = 'humble';
 		
 			//get the value of the dropdown list
 
@@ -128,38 +133,118 @@
 
 			//danceability, energy, loudness, valence, tempo, acousticness, speechiness, track_popularity
 
-			//features of the top 10 songs --> MAKE THIS INTO DICTIONARY
+			//features of the top 10 songs and all DSI
+			var anotherdayofsun = [{key: 'Danceability', value: 0.588}, 
+									{key: 'Energy', value: 0.742}, 
+									{key: 'Loudness', value: 0.17345050899999997}, 
+									{key: 'Valence', value: 0.8240000000000001}, 
+									{key: 'Tempo', value: 0.424211694}, 
+									{key: 'Acousticness', value: 0.0162}, 
+									{key: 'Speechiness', value: 0.0528}, 
+									{key: 'Track Popularity', value: 0.7654320990000001}];
 
-			var humble = [{key: 'Danceability', value:0.908}, 
-							{key: 'Energy', value:0.621},
-							{key: 'Loudness', value: 0.20097132}, 
-							{key: 'Valence', value:0.421}, 
-							{key: 'Tempo', value:0.6556520741}, 
-							{key: 'Acousticness', value:0.000282},
-							{key: 'Speechiness', value:0.1020}, 
-							{key: 'Track Popularity', value:0.97530864}];
+			var badandboujee = [{key: 'Danceability', value: 0.927}, 
+								{key: 'Energy', value: 0.665}, 
+								{key: 'Loudness', value: 0.507400555}, 
+								{key: 'Valence', value: 0.175}, 
+								{key: 'Tempo', value: 0.43623718}, 
+								{key: 'Acousticness', value: 0.061}, 
+								{key: 'Speechiness', value: 0.244}, 
+								{key: 'Track Popularity', value: 0.8888888890000001}];
 
-			var shape_of_you = [0.825, 0.652, -3.183, 0.931, 95.977, 0.581000, 0.0802, 0.00e+00]
-			var star_boy = [0.678, 0.588, -7.015, 0.486, 186.005, 0.141000, 0.2760, 6.35e-06]
-			var another_day_of_sun =[0.588, 0.742, -6.757, 0.824, 125.819, 0.016200, 0.0528, 3.98e-06]
-			var bad_and_boujee = [0.927, 0.665, -5.313, 0.175, 127.076, 0.061000, 0.2440, 0.00e+00]
-			var despacito = [0.694, 0.815, -4.328, 0.813, 88.931, 0.229000, 0.1200, 0.00e+00]
-			var paris = [0.646, 0.644, -6.763, 0.251, 99.999, 0.024300, 0.0310, 0.00e+00]
-			var slide = [0.736,	0.795, -3.299,	0.511, 104.066, 0.498000, 0.0545, 1.21e-06]
-			var bounce_back = [0.788, 0.516, -6.807, 0.235, 81.497, 0.100000, 0.2190, 0.00e+00]
-			var broccoli = [0.886, 0.525, -7.390, 0.708, 145.990, 0.236000, 0.1320, 0.00e+00]
+			var bounceback = [{key: 'Danceability', value: 0.77}, 
+								{key: 'Energy', value: 0.5670000000000001}, 
+								{key: 'Loudness', value: 0.41836262700000004}, 
+								{key: 'Valence', value: 0.26}, 
+								{key: 'Tempo', value: 0.0}, 
+								{key: 'Acousticness', value: 0.105}, 
+								{key: 'Speechiness', value: 0.175}, 
+								{key: 'Track Popularity', value: 0.8888888890000001}];
+
+			var starboy = [{key: 'Danceability', value: 0.6779999999999999}, 
+							{key: 'Energy', value: 0.588}, 
+							{key: 'Loudness', value: 0.113783534}, 
+							{key: 'Valence', value: 0.486}, 
+							{key: 'Tempo', value: 1.0}, 
+							{key: 'Acousticness', value: 0.141}, 
+							{key: 'Speechiness', value: 0.276}, 
+							{key: 'Track Popularity', value: 0.962962963}];
+
+			var slide = [{key: 'Danceability', value: 0.736}, 
+							{key: 'Energy', value: 0.795}, 
+							{key: 'Loudness', value: 0.973172988}, 
+							{key: 'Valence', value: 0.511}, 
+							{key: 'Tempo', value: 0.21610477600000003}, 
+							{key: 'Acousticness', value: 0.498}, 
+							{key: 'Speechiness', value: 0.0545}, 
+							{key: 'Track Popularity', value: 0.851851852}];
+
+			var broccoli = [{key: 'Danceability', value: 0.8859999999999999}, 
+							{key: 'Energy', value: 0.525}, 
+							{key: 'Loudness', value: 0.027058278999999998}, 
+							{key: 'Valence', value: 0.708}, 
+							{key: 'Tempo', value: 0.617183912}, 
+							{key: 'Acousticness', value: 0.23600000000000002}, 
+							{key: 'Speechiness', value: 0.132}, 
+							{key: 'Track Popularity', value: 0.7777777779999999}];
+
+			var paris = [{key: 'Danceability', value: 0.6459999999999999}, 
+							{key: 'Energy', value: 0.644}, 
+							{key: 'Loudness', value: 0.172062905}, 
+							{key: 'Valence', value: 0.251}, 
+							{key: 'Tempo', value: 0.177196541}, 
+							{key: 'Acousticness', value: 0.0243}, 
+							{key: 'Speechiness', value: 0.031}, 
+							{key: 'Track Popularity', value: 0.8888888890000001}];
+
+			var humble = [{key: 'Danceability', value: 0.9079999999999999}, 
+							{key: 'Energy', value: 0.621}, 
+							{key: 'Loudness', value: 0.200971323}, 
+							{key: 'Valence', value: 0.42100000000000004}, 
+							{key: 'Tempo', value: 0.655652074}, 
+							{key: 'Acousticness', value: 0.00028199999999999997}, 
+							{key: 'Speechiness', value: 0.102}, 
+							{key: 'Track Popularity', value: 0.975308642}];
+
+			var despacito = [{key: 'Danceability', value: 0.653}, 
+							{key: 'Energy', value: 0.816}, 
+							{key: 'Loudness', value: 0.7294172059999999}, 
+							{key: 'Valence', value: 0.816}, 
+							{key: 'Tempo', value: 0.924240395}, 
+							{key: 'Acousticness', value: 0.228}, 
+							{key: 'Speechiness', value: 0.16699999999999998}, 
+							{key: 'Track Popularity', value: 0.9259259259999999}];
+
+			var shapeofyou = [{key: 'Danceability', value: 0.825}, 
+								{key: 'Energy', value: 0.652}, 
+								{key: 'Loudness', value: 1.0}, 
+								{key: 'Valence', value: 0.9309999999999999}, 
+								{key: 'Tempo', value: 0.138718812}, 
+								{key: 'Acousticness', value: 0.581}, 
+								{key: 'Speechiness', value: 0.0802}, 
+								{key: 'Track Popularity', value: 0.9135802470000001}];
+
+			var all_dsi = [{key: 'Danceability', value: 0.622}, 
+								{key: 'Energy', value: 0.647}, 
+								{key: 'Loudness', value: 0.855690410355544}, 
+								{key: 'Valence', value: 0.43799999999999994}, 
+								{key: 'Tempo', value: 0.427017144227311}, 
+								{key: 'Acousticness', value: 0.138}, 
+								{key: 'Speechiness', value: 0.0493}, 
+								{key: 'Track Popularity', value: 0.52}];
 
 
+			var resultdata = []
 			if (song_value == "humble"){
-				d3.select("#test").text("humble");
+				resultdata = humble;
 			}
 
 
 			//  Width and height of svg
-			var w = 700;
+			var w = 900;
 			var h = 500;
-			var margin = {top: 25, right: 0, bottom: 25,
-      		left: 25};
+			var margin = {top: 30, right: 140, bottom: 30,
+      		left: 30};
   			var innerWidth = w - margin.left - margin.right;
   			var innerHeight = h - margin.top - margin.bottom;
 
@@ -220,7 +305,7 @@
 
 
 			var bars = svg.append("g")
-				.attr("id", "plot")
+				.attr("class", "plot")
 				.attr("transform", `translate (${margin.left}, ${margin.top})`)
 				.selectAll("rect")
 				.data(bardata, d => d.key);
@@ -230,7 +315,7 @@
 				.attr("y", d => yScale(d.value))
 				.attr("width", xScale.bandwidth())
 				.attr("height", d => innerHeight - yScale(d.value))
-				.attr("fill", "purple")
+				.attr("fill", "#FA7268")
 				.call(d3.drag()
 					.on("start", dragstart)
 					.on("drag", dragging)
@@ -251,19 +336,98 @@
 			};
 
 			//	This function isn't working right now, not selecting the bars, eventually it should add new bars with the actual values, was just using color to test the functionality of this
-			
+
 			function results(){
-				svg.select("g").attr("id", "plot").selectAll("rect")
+				svg.select(".plot").selectAll("rect")
 				.transition()
-				.style("fill", "blue");
+				.duration(1500)
+				.style("fill-opacity", .5)
+				// .style("stroke", "black")
+				.style("stroke-width", 1);
+
+				var bars = svg.append("g")
+					.attr("class", "results")
+					.attr("transform", `translate (${margin.left}, ${margin.top})`)
+					.selectAll("rect")
+					.data(resultdata, d => d.key);
+
+				bars.enter()
+					.append("rect")
+					.attr("x", d => xScale(d.key))
+					.attr("y", d => yScale(d.value))
+					.attr("width", xScale.bandwidth())
+					.attr("height", d => innerHeight - yScale(d.value))
+					.attr("fill", "#ffcc66")
+					.attr("fill-opacity", 0)
+					.transition()
+					.delay(1500)
+					.duration(1500)
+					.attr("fill-opacity", .6);
+
+				svg.append("text")
+					.text("Actual Values")
+					.style("fill", "#F8AD00")
+					.style("font-size", 12)
+					.attr("x", innerWidth+margin.left+10)
+					.attr("y", yScale(resultdata.slice(-1)[0]["value"])+margin.top )
+					.attr("fill-opacity", 0)
+					.transition()
+					.delay(2800)
+					.attr("fill-opacity", 1);
+
+				var lines = svg.append("g")
+					.attr("class", "all_dsi")
+					.attr("transform", `translate (${margin.left}, ${margin.top})`)
+					.selectAll("line")
+					.data(all_dsi, d => d.key);
+
+				lines.enter()
+					.append("line")
+					.attr("x1", d => xScale(d.key))
+					.attr("y1", d => yScale(d.value))
+					.attr("x2", d => xScale(d.key)+ xScale.bandwidth())
+					.attr("y2", d => yScale(d.value))
+					.style("stroke-width", 3)
+					.style("stroke-dasharray", 4)
+					.style("stroke", "#006666")
+					.attr("stroke-opacity", 0)
+					.transition()
+					.delay(5000)
+					.duration(1000)
+					.attr("stroke-opacity", 1);
+
+
+				svg.append("text")
+					.text("Median of all DSI songs")
+					.style("fill", "#006666")
+					.style("font-size", 12)
+					.attr("x", innerWidth+margin.left+10)
+					.attr("y", yScale(all_dsi.slice(-1)[0]["value"])+margin.top )
+					.attr("fill-opacity", 0)
+					.transition()
+					.delay(5800)
+					.attr("fill-opacity", 1);
+
+
+
+			}
+
+			//	 Not done yet!
+			function restart(){
 
 			}
 
 		</script>
 
+		<!-- Would be nice to change button sizes to be bigger!! Add restart function -->
 		<div class = "submit">
 	  		<input type="button" value="Submit" onclick="results()"/>
-
 		</div>
+
+		<div class = "restart">
+	  		<input type="button" value="Play Again" onclick="restart()"/>
+		</div>
+
+		<p></p>
 	</body>
 </html>
