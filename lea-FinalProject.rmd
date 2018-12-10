@@ -12,8 +12,8 @@ For this project, we will be using the Spotify API and the R package for it, Spo
 ```{r, include = FALSE}
 library(spotifyr)
 # input your own spotify client id and spotify client secret to be able to use Spotify's API
-Sys.setenv(SPOTIFY_CLIENT_ID = '')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = '')
+Sys.setenv(SPOTIFY_CLIENT_ID = 'b273df75336c485596266c68d3e7c1c2')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = 'e88980163181450eb429c2f3f4723f90')
 
 access_token <- get_spotify_access_token()
 ```
@@ -338,16 +338,19 @@ The danceability histogram shows that the data is slightly left-skewed with only
 # cleaning up the data a bit
 class_data$X1 <- NULL
 
-# MAKE THIS INTO A FUNCTION
-# normalizing all variables to be between 0 and 1
-x <- class_data$loudness
-class_data$normalized_loudness <- (x-min(x))/(max(x)-min(x))
-class_data$normalized_pop <- class_data$track_popularity/100
-class_data$normalized_artist_pop <- class_data$artist_popularity/100
-x <- class_data$tempo
-class_data$normalized_tempo <- (x-min(x))/(max(x)-min(x))
-x <- class_data$instrumentalness 
-class_data$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+normalize1 <- function(x){
+  return (x - min(x))/(max(x) - min(x))
+}
+
+normalize2 <- function(x){
+  return (x/100)
+}
+
+class_data$normalized_loudness <- normalize1(class_data$loudness)
+class_data$normalized_pop <- normalize2(class_data$track_popularity)
+class_data$normalized_artist_pop <- normalize2(class_data$artist_popularity)
+class_data$normalized_tempo <- normalize1(class_data$tempo)
+class_data$normalized_instrumentalness <- normalize1(class_data$instrumentalness)
 
 display_class_data <- class_data[which(class_data$`Display` == 'Yes'),]
 
@@ -357,7 +360,8 @@ cont_var <- class_data %>% select(normalized_pop, danceability, energy, normaliz
 names(cont_var) <- c("popularity", "dance", "energy", "loud", "speech", "acoustic", "instrumental", "valence", "tempo")
 ```
 
-Make this into a Cleveland dotplot as well
+To explore both how similar DSI students are in their music preferences and the key ways in which they differ, we thought it would first be interesting to see which students like songs and artists that have been deemed 'popular' by Spotify. 
+
 
 ```{r}
 avg_class_data <- display_class_data %>% group_by(Name) %>% summarise_at(vars(normalized_artist_pop, normalized_pop, danceability, energy, valence, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, normalized_tempo), funs(mean(., na.rm = TRUE)))
@@ -463,7 +467,6 @@ top_2017 <- get_playlist_audio_features('spotify', '37i9dQZF1DX5nwnRMcdReF')
 ```
 
 ```{r}
-
 # normalizing all variables to be between 0 and 1
 x <- us_top_50$loudness
 us_top_50$normalized_loudness <- (x-min(x))/(max(x)-min(x))

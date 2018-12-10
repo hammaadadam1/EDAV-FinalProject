@@ -1,0 +1,362 @@
+---
+title: "lea-FinalReportGraphs"
+author: "Lea Collin"
+date: "12/9/2018"
+output: pdf_document
+---
+
+## Data Cleaning
+
+```{r, include = FALSE}
+setwd("~/Columbia/EDAV/FinalProject/EDAV-FinalProject")
+library(tidyverse)
+library(spotifyr)
+# input your own spotify client id and spotify client secret to be able to use Spotify's API
+Sys.setenv(SPOTIFY_CLIENT_ID = 'b273df75336c485596266c68d3e7c1c2')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = 'e88980163181450eb429c2f3f4723f90')
+
+access_token <- get_spotify_access_token()
+
+```
+
+Below is all the code written to extract the Spotify user and playlist ID's from the survey data. The *stringr* package and fairly simple Regex's were used in order to get the desired information. 
+
+```{r}
+# reading in and changing the column names
+survey_data <- read_csv("StudentResponses.csv", col_names = TRUE)
+names(survey_data) <- c("Timestamp", "email", "uni", "age", "gender", "nationality", "location2017", "undergrad", "useFrequency", "username", "playlistID", "otherPlatform", "consent")
+
+# Deepak gave us the wrong playlist so we are going to delete his row
+survey_data[which(survey_data$uni == 'dr2998'),] <- NA
+```
+
+```{r}
+library(stringr)
+pattern <- '^spotify:user:(\\S*)$|^https://open\\.spotify\\.com/user/([^?]*)'
+matches <- str_match(survey_data$username, pattern)
+match1 <- matches[,2]
+match2 <- matches[,3]
+
+user <- c()
+
+for (i in seq_along(match1)){
+ if(!is.na(match1[i])){
+   user <- c(user, match1[i])
+ }
+ else if(!is.na(match2[i])){
+   user <- c(user, match2[i])
+ }
+ else{
+   user <- c(user, NA)
+ }
+}
+
+survey_data$cleanUser <- user
+
+pattern2 <- '^spotify:user:[\\S]*:playlist:(\\S*)$|^https:\\/\\/open\\.spotify\\.com\\/playlist\\/(\\S*)$|^https:\\/\\/open\\.spotify\\.com\\/user\\/spotify\\/playlist\\/(\\S*)[\\?].*$'
+playlist_matches <- str_match(survey_data$playlistID, pattern2)
+playlist_matches1 <- playlist_matches[,2]
+playlist_matches2 <- playlist_matches[,3]
+playlist_matches3 <- playlist_matches[,4]
+
+playlist_id <- c()
+
+for (i in seq_along(playlist_matches1)){
+ if(!is.na(playlist_matches1[i])){
+   playlist_id <- c(playlist_id, playlist_matches1[i])
+ }
+ else if(!is.na(playlist_matches2[i])){
+   playlist_id <- c(playlist_id, playlist_matches2[i])
+ }
+ else if(!is.na(playlist_matches3[i])){
+   playlist_id <- c(playlist_id, playlist_matches3[i])
+ }
+ else{
+   playlist_id <- c(playlist_id, NA)
+ }
+}
+
+survey_data$cleanPlaylist <- playlist_id
+```
+
+Below is the code to clean up the country and undergraduate columns from the survey.
+
+```{r}
+# cleaning up city
+for (i in seq_along(survey_data$location2017)){
+  if(!is.na(survey_data$location2017[i])){
+    if(survey_data$location2017[i] == 'bangalore, India'){
+    survey_data$location2017[i] = 'Bangalore, India'
+  }
+  if(survey_data$location2017[i] == 'NYC' || survey_data$location2017[i] == 'NYC, USA'){
+    survey_data$location2017[i] = 'New York, USA'
+  }
+  if(survey_data$location2017[i] == 'Boston' || survey_data$location2017[i] == 'Boston,USA'){
+    survey_data$location2017[i] = 'Boston, USA'
+  }
+  }
+}
+```
+
+```{r}
+# cleaning up undergrad
+for (i in seq_along(survey_data$undergrad)){
+  if(!is.na(survey_data$undergrad[i])){
+    if(survey_data$undergrad[i] == 'Itam' || survey_data$undergrad[i] == 'Instituto Tecnologico Autonomo de Mexico'){
+    survey_data$undergrad[i] = 'ITAM'
+  }
+  if(survey_data$undergrad[i] == 'Cornell'){
+    survey_data$undergrad[i] = 'Cornell University'
+  }
+  if(survey_data$undergrad[i] == 'Vellore institute of technology' || survey_data$undergrad[i] == 'Vellore Institute of Technology, India'){
+    survey_data$undergrad[i] = 'Vellore Institute of Technology'
+  }
+  }
+}
+```
+
+Since my group members and I did not fill out the survey and we had already analyzed our playlists for the fourth assingment, we had already gotten the audio features. Below is the code where we read in our own audio features, add in the variables we asked from the survey for ourselves, and creating a new data frame with everyone's data. 
+
+```{r}
+# creating an empty data frame where everyone's playlist information will be stored
+class_playlists = data.frame()
+
+for (i in seq_along(survey_data$cleanUser)){
+  if(!is.na(survey_data$cleanUser[i]) && !is.na(survey_data$cleanPlaylist)){
+    # print(survey_data$cleanUse[i])
+    temp <- get_playlist_audio_features(survey_data$cleanUser[i], survey_data$cleanPlaylist[i])
+    temp$user_id <- survey_data$cleanUser[i]
+    temp$location2017 <- survey_data$location2017[i]
+    temp$nationality <- survey_data$nationality[i]
+    temp$undergrad <- survey_data$undergrad[i]
+    temp$age <- survey_data$age[i]
+    temp$useFrequency <- survey_data$useFrequency[i]
+    class_playlists <- rbind(class_playlists, temp)
+  }
+}
+
+lea <- get_playlist_audio_features('leac750', '37i9dQZF1E9UKwJS1D9012')
+danielle <- get_playlist_audio_features('danielle219', '37i9dQZF1E9Lke9WJ01eT7')
+hammaad <- get_playlist_audio_features('1256140081', '37i9dQZF1E9ECwVUJQFrgP')
+kelly <- get_playlist_audio_features('22ugjl3xvvzgwtbwi3ubpt72a', '37i9dQZF1E9VRPVezelVUk')
+
+lea$undergrad <- 'McGill University'
+hammaad$undergrad <- 'Yale University'
+kelly$undergrad <- 'University of Rochester'
+danielle$undergrad <- 'Duke University'
+
+lea$location2017 <- 'Montreal, CA'
+hammaad$location2017 <- 'Boston, USA'
+kelly$location2017 <- 'New York, USA'
+danielle$location2017 <- 'New York, USA'
+
+lea$nationality <- 'France'
+hammaad$nationality <- 'India'
+kelly$nationality <- 'China'
+danielle$nationality <- 'United States'
+
+lea$age <- 22
+hammaad$age <- 24
+kelly$age <- 24
+danielle$age <- 24
+
+lea$useFrequency <- 3
+hammaad$useFrequency <- 5
+kelly$useFrequency <- 3
+danielle$useFrequency <- 5
+
+lea$user_id <- 'lea'
+hammaad$user_id <- 'hammaad'
+kelly$user_id <- 'kelly'
+danielle$user_id <- 'danielle'
+
+class_playlists <- rbind(class_playlists, lea)
+class_playlists <- rbind(class_playlists, hammaad)
+class_playlists <- rbind(class_playlists, kelly)
+class_playlists <- rbind(class_playlists, danielle)
+```
+
+## Main Analysis
+
+```{r}
+# this file include track genre and the student's name
+class_data <- read_csv("PlaylistNameGenre.csv", col_names = TRUE)
+```
+
+```{r}
+# cleaning up the data a bit
+class_data$X1 <- NULL
+
+x <- class_data$loudness
+class_data$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+class_data$normalized_pop <- class_data$track_popularity/100
+class_data$normalized_artist_pop <- class_data$artist_popularity/100
+x <- class_data$tempo
+class_data$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- class_data$instrumentalness 
+class_data$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+
+# when making graphs where we are showing student name, only include names of people that agreed to have their names shown
+display_class_data <- class_data[which(class_data$`Display` == 'Yes'),]
+
+# selecting only the continuous variables from the dataset to later make a scatterplot matrix
+cont_var <- class_data %>% select(normalized_pop, danceability, energy, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, valence, normalized_tempo)
+
+names(cont_var) <- c("popularity", "dance", "energy", "loud", "speech", "acoustic", "instrumental", "valence", "tempo")
+```
+
+To first begin addressing what distinctive features make a DSI song popular, we decided to first look at how all of these features are generally connected to each other. Most of the features we decided to look at (as they were the most interesting ones), were continuous variables so we made a scatterplot matrix to assess their correlations.
+
+```{r, fig.width = 10, fig.height = 8}
+library(GGally)
+scatter_vars <- ggpairs(cont_var, title = "", axisLabels = "show", progress = FALSE)
+scatter_vars
+```
+
+Many of the variables are uncorrelated or very weakly correlated. The strongest positive correlations are between energy and loudness (0.786), valence and energy (0.4), valence and danceability (0.395), and loudness and valence (0.323). It's interesting that track popularity is not really correlated with any of the variables as this makes us wonder what Spotify considers when scoring this. What's interesting is that Spotify claims that it calculates danceability based on the tempo but not only is there almost no correlation between danceability and tempo, but they are even slightly negatively correlated! This might be interesting to look more into as a future direction or given more time. 
+
+We wanted to know more about the most popular songs and artists amoungst EDAV studetns to see if these have any features in common. 
+
+```{r}
+top_fifty_songs <- as.data.frame(rev(sort(table(class_data$track_name)))[1:50])
+top_fifty_songs$Var1 <- as.factor(top_fifty_songs$Var1)
+
+class_data$`Song Popularity` <- ifelse(class_data$track_name %in% top_fifty_songs$Var1, "EDAV Top 50", "EDAV Not Top 50")
+
+edav_top_50_songs <- class_data[which(class_data$`Song Popularity` == 'EDAV Top 50'), ]
+edav_not_top_50_songs <- class_data[which(class_data$`Song Popularity` == 'EDAV Not Top 50'), ]
+
+edav_top_50_songs$playlist_name <- 'EDAV Top 50 Songs'
+edav_not_top_50_songs$playlist_name <- 'EDAV Not Top 50 Songs'
+```
+
+To compare EDAV's tastes in 2017 to what's generally popular today and what was popular on Spotify in 2017, we will compare some features to Spotify's 'US Top 50', 'Global Top 50' and 'Top Tracks 2017' playlists.
+
+```{r}
+us_top_50 <- get_playlist_audio_features('spotifycharts', '37i9dQZEVXbLRQDuF5jeBp')
+global_top_50 <- get_playlist_audio_features('spotifycharts','37i9dQZEVXbMDoHDwVN2tF')
+top_2017 <- get_playlist_audio_features('spotify', '37i9dQZF1DX5nwnRMcdReF')
+
+# normalizing all variables to be between 0 and 1
+x <- us_top_50$loudness
+us_top_50$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+us_top_50$normalized_pop <- us_top_50$track_popularity/100
+x <- us_top_50$tempo
+us_top_50$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- us_top_50$instrumentalness 
+us_top_50$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+
+x <- global_top_50$loudness
+global_top_50$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+global_top_50$normalized_pop <- global_top_50$track_popularity/100
+x <- global_top_50$tempo
+global_top_50$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- global_top_50$instrumentalness 
+global_top_50$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+
+x <- top_2017$loudness
+top_2017$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+top_2017$normalized_pop <- top_2017$track_popularity/100
+x <- top_2017$tempo
+top_2017$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- top_2017$instrumentalness 
+top_2017$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+```
+
+```{r}
+excluded_vars <- c('gender', 'user_id', 'location2017', 'nationality', 'undergrad', 'age', 'useFrequency', 'Name', 'Display', 'artist_uri', 'artist_genres', 'Name', 'Song Popularity', 'artist_popularity', 'artist_num_followers', 'normalized_artist_pop')
+edav_top_50_songs <- select(edav_top_50_songs, -excluded_vars)
+edav_not_top_50_songs <- select(edav_not_top_50_songs, -excluded_vars)
+
+all_data <- rbind(edav_top_50_songs, us_top_50)
+all_data <- rbind(all_data, global_top_50)
+all_data <- rbind(all_data, top_2017)
+```
+
+To look at the difference in distribution in the continuous variables between all these playlists, we made several density curves and box-plots. Only the most revealing/interesting ones are included within this report. We chose density curves and box-plots as we find these to be the best way to see and compare difference between groups and their continuous variables. 
+
+
+```{r}
+diff_loud_songs <- ggplot(all_data, aes(x = normalized_loudness, fill = playlist_name)) +
+  geom_density(alpha = 0.4) + xlab("Loudness")
+diff_loud_songs
+```
+
+```{r}
+diff_tempo_songs <- ggplot(all_data, aes(x = normalized_tempo, fill = playlist_name)) +
+  geom_density(alpha = 0.4) + xlab("Tempo")
+diff_tempo_songs
+```
+
+```{r}
+diff_energy_songs <- ggplot(all_data, aes(x = energy, fill = playlist_name)) + 
+  geom_density(alpha = 0.4) + xlab("Energy")
+diff_energy_songs
+```
+
+For energy, we see that there is not such a drastic difference in distribution between the EDAV Top 50 Songs and the other three playlists. However, we clearly see a huge difference in loudness between popular EDAV songs and the popular playlists on Spotify. This is pretty interesting and we also look at this variable as box-plot and with the less popular EDAV songs included below. It also seems that tempo is generally higher for EDAV songs than the others. A box-plot is also included for this below.  
+
+```{r}
+all_data <- rbind(all_data, edav_not_top_50_songs)
+```
+
+```{r, fig.height = 6}
+edav_loud_box <- ggplot(all_data, aes(x=reorder(playlist_name, -1*normalized_loudness, FUN=median), y=normalized_loudness)) + 
+  geom_boxplot(fill='#CCCCFF') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ggtitle("EDAV, Keep It Down") +
+  xlab("Playlist") + ylab("Loudness") + 
+  theme_minimal(15) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+edav_loud_box
+```
+
+From this graph, we see that even when we include the 'less popular' EDAV songs, they are still generally much louder than the songs on the other playlists. Given more time, it could be interesting to look at what songs specifically are causing this trend in the playlists. 
+
+```{r, fig.height = 6}
+edav_tempo_box <- ggplot(all_data, aes(x = reorder(playlist_name, -1*normalized_tempo, FUN = median), y = normalized_tempo)) +
+  geom_boxplot(fill='#CCCCFF') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_minimal(15) +
+  xlab("Playlist") + ylab("Tempo") + ggtitle("Why are you in such a rush?") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+edav_tempo_box
+```
+
+Similar to what we saw from the density curve, we see that EDAV likes slightly faster music than the rest of Spotify users. 
+
+#### Second Part of Main Analysis
+
+To explore both how similar DSI students are in their music preferences and the key ways in which they differ, we thought it would first be interesting to see which students like songs and artists that have been deemed 'popular' by Spotify. 
+
+
+```{r, fig.height = 8, fig.width = 10}
+avg_class_data <- display_class_data %>% group_by(Name) %>% summarise_at(vars(normalized_artist_pop, normalized_pop, danceability, energy, valence, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, normalized_tempo), funs(mean(., na.rm = TRUE)))
+
+names(avg_class_data) <- c("Name", "Artist Popularity", "Track Popularity", "Danceability", "Energy", "Valence", "Loudness"," Speechiness", "Acousticness", "Instrumentalness", "Tempo")
+
+tidy_avg <- avg_class_data %>% select(Name, `Track Popularity`, `Artist Popularity`) %>% 
+  arrange(`Track Popularity`) %>% 
+  mutate(Name = factor(Name, levels = .$Name)) %>% tidyr::gather(key = 'Category', value = 'Percentage', -Name)
+
+pop_cd <- ggplot(tidy_avg, aes(x = Percentage, y = Name, color = Category)) +
+          geom_point() + ylab("") + theme_minimal() +
+          ggtitle("Hammaad and Lea Are Basic AF") +
+        scale_color_manual(values=c("red", "blue")) +
+    theme(legend.title=element_text(size=15), legend.text=element_text(size=13))
+pop_cd
+```
+
+## Help On Interactive
+
+Below is the code to add the median of all DSI songs to help in the visualization for the interactive component of the project.
+
+```{r}
+top_10 <- read_csv("top_10.csv", col_names =  TRUE)
+averages <- class_data %>% summarise_at(vars(danceability, energy, normalized_loudness, valence, normalized_tempo, acousticness, speechiness, normalized_pop), funs(median(., na.rm = TRUE)))
+averages$track_name <- "all_dsi"
+averages$artist_name <- "dsi"
+names(averages) <- c("danceability", "energy", "loudness", "valence", "tempo", "acousticness", "speechiness", "track_popularity", "track_name", "artist_name")
+averages <- averages[c(9, 10, 1:8)]
+top_10 <- rbind(top_10, averages)
+```
