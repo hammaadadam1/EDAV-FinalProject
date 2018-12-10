@@ -1,15 +1,18 @@
 ---
 title: "Spotify Project"
-author: "Hammaad Adam, Lea Collin, Danielle Su, Ling (Kelly) He"
+author: "Hammaad Adam, Lea Collin, Ling (Kelly) He, Danielle Su"
 date: December 10, 2018
-output: html_document
+output: pdf_document
 ---
+
+All of the code for this project can be found [here](https://github.com/LeaCollin0518/EDAV-FinalProject).
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r import, include = FALSE}
+setwd("~/Columbia/EDAV/FinalProject/EDAV-FinalProject")
 library(spotifyr)
 library(tidyverse)
 library(gridExtra)
@@ -22,7 +25,7 @@ access_token <- get_spotify_access_token()
 ```
 
 ```{r dataimp, include = FALSE, cache = TRUE}
-data = read.csv("/Users/hammaadadam/Desktop/Columbia/Courses/STAT GR5702/Final Project/EDAV-FinalProject/Final_DSI_Playlist.csv", na.strings = "n/a")
+data = read.csv("Final_DSI_Playlist.csv", na.strings = "n/a")
 
 data = data %>% select(-artist_genres)
 
@@ -142,6 +145,26 @@ edav_not_top_50_songs <- select(edav_not_top_50_songs, -excluded_vars)
 
 ## Analysis of Data Quality
 
+As mentioned before, the Spotify API made our data collection process extremely easy. The API did not provide any missing values for the features that we looked into. The only features that were missing values would be columns like 'album image', which we did not look at during our analysis. 
+Most of our data issues came from a small number of respondents to the survey and not having as many different variables to look at as we had initially hoped for. Below, we look at the different missing data patterns. 
+
+```{r, fig.height = 6}
+library(extracat)
+survey_data <- read_csv("StudentResponses.csv", col_names = TRUE)
+names(survey_data) <- c("Timestamp", "email", "uni", "age", "gender", "nationality", "location2017", "undergrad", "useFrequency", "username", "playlistID", "otherPlatform", "consent")
+visna(survey_data, sort = 'b')
+```
+
+As we can see from this plot, missing the "otherPlatform" variable (and no other variables) is the most common missing pattern in the survey data. The "otherPlatform" column was used to see if people use other music-listening platforms different from Spotify. It is actually nice that this value is missing for so many users because it means that they are big users of Spotify. The second-most common pattern is to not have any columns missing. One person didn't give us their Spotify user ID or their playlist ID so we were not able to include them in our dataset. For the most part, this graph shows that we were able to capture the most pertinent information from our users. Though we were not able to collect as much data as we would have liked, the data we did collect was of very good quality in terms of what information we wanted. 
+
+We did quite a bit of analysis using artist's genre so we took a look at how many artists have this information available. As we see below, only 7.041667% of artists present in the dataset have missing genre information, or 169 out of 2400 rows in the dataset.
+
+```{r}
+data[which(data$artist_genres == "NULL"),] <- NA
+print (sum(is.na(data$artist_genres))/nrow(data))
+print (sum(is.na(data$artist_genres)))
+```
+
 ## Main Analysis
 
 ### Data Cleaning
@@ -195,7 +218,7 @@ df <- df %>%
   mutate(tempo=scales::rescale(tempo,to=c(0, 1)))
 ```
 
-```{r parcoord, fig.height=3, fig.width=6}
+```{r parcoord, fig.height=6, fig.width=6}
 ggparcoord(df, columns = 1:8, alphaLines = .2, 
            scale = "uniminmax", groupColumn = "gender", splineFactor = 10) +
   ggtitle("Parallel Coordinate Plot by Gender") +
@@ -205,7 +228,8 @@ ggparcoord(df, columns = 1:8, alphaLines = .2,
                         labels = c("Female", 
                                    "Male"), 
                         values = c("Female"="#663399",
-                                   "Male"="#66FFFF"))
+                                   "Male"="#66FFFF")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 We also drew a parallel coordinate plot with "Country in 2017" as the "groupColumn" to determine whether the location of Spotify users affect their music tastes. Due to our limited data, we do not have enough country information other than for the USA, so we decided to group all the other countries into one category called "OTHER". Half of the 24 users were in USA in 2017. The two country groups are more intertwined compared to the gender groups in the previous plot, indicating that country did not have much impact on users' music taste (within our limited sample). 
@@ -227,7 +251,7 @@ df[,"clean_country"] = fct_recode(df[,"clean_country"], Canada ="CA")
 levels(df$clean_country)[!levels(df$clean_country) == "USA"]<- "OTHER"
 ```
 
-```{r parcoord2, fig.height=3, fig.width=6}
+```{r parcoord2, fig.height=6, fig.width=6}
 ggparcoord(df, columns = 1:8, alphaLines = .2, 
            scale = "uniminmax", groupColumn = "clean_country", 
            splineFactor = 10) +
@@ -238,12 +262,13 @@ ggparcoord(df, columns = 1:8, alphaLines = .2,
                         labels = c("USA", 
                                    "OTHER"), 
                         values = c("USA"="#FF6666",
-                                   "OTHER"="#3399FF"))
+                                   "OTHER"="#3399FF")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 After this initial assessment, we wanted to analyze the quantitative relationships between the audio features. The graphs below show the correlation amongst each pair of features. It's not surprising that energy and loudness are the most positively correlated features, while energy and acousticness are the most negatively correlated features. As the name suggests, acousticness is a measure of how likely the track is to be acoustic; generally acoustic songs are considered to be more mellow and less high-energy. 
 
-```{r}
+```{r corr, message = FALSE, warning = FALSE}
 library(pgmm)
 library(GGally)
 ggcorr(df[1:8], palette = "RdBu", label = TRUE, label_size = 2.5,
@@ -252,19 +277,8 @@ size = 3, legend.position = "bottom", hjust = 1) +
   ggtitle("How are audio features correlated?") 
 ```
 
-
-```{r corr, message = FALSE, warning = FALSE}
-ggcorr(df[1:8], palette = "RdBu", label = TRUE, label_size = 2.5,
-size = 3, legend.position = "bottom", hjust = 1) +
-  theme_minimal(15) +
-  ggtitle("How are audio features correlated?") 
-```
-
-```{r, include = FALSE, cache = TRUE}
+```{r scatter, fig.width = 10, fig.height = 8}
 scatter_vars <- ggpairs(cont_var, title = "", axisLabels = "show", progress = FALSE)
-```
-
-```{r, fig.width = 10, fig.height = 8}
 scatter_vars
 ```
 
@@ -324,27 +338,23 @@ ggplot(head(artist_df, 30) , aes(x=reorder(artist_name, -appearance), y= appeara
 
 When looking at what makes an artist popular for DSI, we also wanted to see if the popularity of the artist on Spotify matched the popularity of the artist in DSI. To look at this, we have a density curve of artist popularity (Spotify's metric) between popular and less popular artists in DSI.
 
-```{r, include = FALSE}
+```{r art_pop}
 lea_all_data <- rbind(edav_top_10_artists, edav_not_top_10_artists)
 
 diff_art_pop <- ggplot(lea_all_data, aes(x = normalized_artist_pop, fill = playlist_name)) + 
   geom_density(alpha = 0.4) + xlab("Artist Popularity") + ylab("Density") +
   guides(fill=guide_legend(title="Playlist Name"))
-```
 
-```{r}
 diff_art_pop
 ```
 
 From this graph, we see that the artists that are popular with DSI students are also considered to be popular by Spotify, so DSI's aritst tastes match closely with the rest of Spotify users. 
 
-```{r, include = FALSE}
+```{r art_dance}
 diff_art_dance <- ggplot(lea_all_data, aes(x = normalized_tempo, fill = playlist_name)) + 
   geom_density(alpha = 0.4) + xlab("Tempo") + ylab("Density") +
   guides(fill=guide_legend(title="Playlist Name"))
-```
 
-```{r}
 diff_art_dance
 ```
 
@@ -406,7 +416,7 @@ We find that there are three key points of differentiation: loudness, tempo and 
 
 **Loudness**
 
-```{r, include = FALSE}
+```{r loud_curve}
 lea_all_data <- rbind(edav_top_50_songs, us_top_50)
 lea_all_data <- rbind(lea_all_data, global_top_50)
 lea_all_data <- rbind(lea_all_data, top_2017)
@@ -414,13 +424,11 @@ lea_all_data <- rbind(lea_all_data, top_2017)
 diff_loud_songs <- ggplot(lea_all_data, aes(x = normalized_loudness, fill = playlist_name)) +
   geom_density(alpha = 0.4) + xlab("Loudness") + ylab("Density") +
   guides(fill=guide_legend(title="Playlist Name"))
-```
 
-```{r}
 diff_loud_songs
 ```
 
-```{r, include = FALSE}
+```{r loud_box, fig.height = 6}
 lea_all_data <- rbind(lea_all_data, edav_not_top_50_songs)
 edav_loud_box <- ggplot(lea_all_data, aes(x=reorder(playlist_name, -1*normalized_loudness, FUN=median), y=normalized_loudness)) + 
   geom_boxplot(fill='#CCCCFF') + 
@@ -429,9 +437,7 @@ edav_loud_box <- ggplot(lea_all_data, aes(x=reorder(playlist_name, -1*normalized
   xlab("Playlist") + ylab("Loudness") + 
   theme_minimal(15) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
 
-```{r, fig.height = 6}
 edav_loud_box
 ```
 
@@ -441,20 +447,18 @@ As we can see above, DSIers, for whatever reason, really enjoy loud music. From 
 
 Thought not as drastic a difference as loudness, we found that DSIers also enjoy slightly faster music than the rest of Spotify users. This finding was again revealed by a density curve and boxplot, included below. 
 
-```{r, include = FALSE}
+```{r tempo_curve}
 lea_all_data <- rbind(edav_top_50_songs, us_top_50)
 lea_all_data <- rbind(lea_all_data, global_top_50)
 lea_all_data <- rbind(lea_all_data, top_2017)
 diff_tempo_songs <- ggplot(lea_all_data, aes(x = normalized_tempo, fill = playlist_name)) +
   geom_density(alpha = 0.4) + xlab("Tempo") + ylab("Density") +
   guides(fill=guide_legend(title="Playlist Name"))
-```
 
-```{r}
 diff_tempo_songs
 ```
 
-```{r, include = FALSE}
+```{r tempo_box, fig.height = 6}
 lea_all_data <- rbind(lea_all_data, edav_not_top_50_songs)
 edav_tempo_box <- ggplot(lea_all_data, aes(x = reorder(playlist_name, -1*normalized_tempo, FUN = median), y = normalized_tempo)) +
   geom_boxplot(fill='#CCCCFF') + 
@@ -462,9 +466,7 @@ edav_tempo_box <- ggplot(lea_all_data, aes(x = reorder(playlist_name, -1*normali
   theme_minimal(15) +
   xlab("Playlist") + ylab("Tempo") + ggtitle("Why are you in such a rush?") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
 
-```{r, fig.height = 6}
 edav_tempo_box
 ```
   
@@ -645,7 +647,7 @@ Each user is fairly unique: the largest degree of overlap between any two playli
 
 Another interesting question to ask is: how 'indie' is everyone in DSI? The best way to look at this is to look at how popular the tracks and artists are that each person listens to. The Cleveland dot plot below averages the track and artist popularity for each DSIers playlists. The plot reveals that Lea and Hammaad both listen to the most popular music (which is not too surprising since they have the most songs in common) and Eric listens to the leas popular music (again not surprising since he had the least number of songs in common with anyone else). An interesting thing to note from the graph is that Tom has a lower track popularity but one of the highest artist popularities. 
 
-```{r, include = FALSE}
+```{r pop_dot_plot, fig.height = 8, fig.width = 10}
 avg_class_data <- display_class_data %>% group_by(Name) %>% summarise_at(vars(normalized_artist_pop, normalized_pop, danceability, energy, valence, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, normalized_tempo), funs(mean(., na.rm = TRUE)))
 
 names(avg_class_data) <- c("Name", "Artist Popularity", "Track Popularity", "Danceability", "Energy", "Valence", "Loudness"," Speechiness", "Acousticness", "Instrumentalness", "Tempo")
@@ -659,9 +661,7 @@ pop_cd <- ggplot(tidy_avg, aes(x = Percentage, y = Name, color = Category)) +
           ggtitle("Hammaad and Lea Are Basic AF") +
         scale_color_manual(values=c("red", "blue")) +
     theme(legend.title=element_text(size=15), legend.text=element_text(size=13))
-```
 
-```{r, fig.height = 8, fig.width = 10}
 pop_cd
 ```
 
