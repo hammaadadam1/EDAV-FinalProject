@@ -2,11 +2,12 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>Final project - interactive component</title>
+		<title>Explore Audio Features of Top DSI Songs</title>
+		<meta name="author" content="Danielle Su and Kelly He">
+		<meta name="description" content="EDAV Final Project - interactive component">
 		<script src="https://d3js.org/d3.v4.min.js"></script>
 
 	</head>
-
 
 
 	<style>
@@ -62,14 +63,14 @@
 	 		<li> Step 3: Venture a guess!
 		 	</li>
 
-		 	Note : Once you submit your guess, you can see how close you were to the actual answers and how the audio features of that song compares to the median of that over all DSI songs.
-		 	
 
+		 	Note : Once you submit your guess, you can see how close you were to the actual answers and how the audio features of that song compares to the median over all DSI songs.
+		 
 	 	</ul>
 
 	 
 
-	  <h2>Description of Audio features</h2>
+	  <h2>Description of Audio Features</h2>
 
 	 <div class="features">
 
@@ -98,6 +99,8 @@
 	 	<li> Track_Popularity: Spotify's track popularity rating transformed from 0 to 100 to 0.0 to 1.0. 
 	 	</li>
 
+	 	Note : Since all values are given between 0.0 and 1.0 and on the same scale, that is the y-axis below and the audio features are on the x-axis.
+
 	 </ul>
 
 	</div>
@@ -113,7 +116,8 @@
 
 	<select class = "dropdown" id= "selected">
         <option disabled selected value> -- Select a song -- </option>                                    
-  		<option name= "song" value="humble">HUMBLE</option>
+
+  		<option name= "song" value="humble">HUMBLE.</option>
   		<option name= "song" value="shapeofyou">Shape of You</option>
   		<option name= "song" value="starboy">Starboy</option>
   		<option name= "song" value="anotherdayofsun">Another Day Of Sun - From "La La Land" Soundtrack</option>
@@ -130,7 +134,8 @@
 
 	<h3>Step 3: Venture a guess!  </h3>
 
-		<p> After you listen to the song, you can drag each bar (feature) to the your guessed value. Once you finished dragging all the bars, click the "submit" button, and you will see the actual answers and the median audio feature values over all DSI songs. You can click "Play Again" to guess for another song! </p>
+
+		<p> After you listen to the song, you can drag each bar (feature) to the your guessed value. Once you finished dragging all the bars, click the "Submit" button, and you will see the actual answers for that song, as well as the median audio feature values over all DSI songs. You can click "Play Again" to refresh and guess again for another song! </p>
 
 		<script type="text/javascript">
 
@@ -143,11 +148,9 @@
    
 			});
 
-			//order of features
+			//Feature list: danceability, energy, loudness, valence, tempo, acousticness, speechiness, track_popularity
 
-			//danceability, energy, loudness, valence, tempo, acousticness, speechiness, track_popularity
-
-			//features of the top 10 songs and all DSI
+			//features of the top 10 songs and all DSI medians
 			var anotherdayofsun = [{key: 'Danceability', value: 0.588}, 
 									{key: 'Energy', value: 0.742}, 
 									{key: 'Loudness', value: 0.17345050899999997}, 
@@ -350,14 +353,14 @@
 			};
 
 
+			// Function when click submit, to get the actual values
+
 			function results(){
 				var resultdata = [];
 
 				//get the value for the song 
-
-
 				resultdata = eval(song_value)
-
+        
 				svg.select(".plot").selectAll("rect")
 				.transition()
 				.duration(1500)
@@ -433,12 +436,12 @@
 
 			}
 
-			//	 restart
+
+			//	 Restart/Play Again Function
 			function restart(){
 				svg.selectAll("rect").remove();
 				svg.selectAll("line").remove();
-				// bars.transition().data(bardata);
-
+        
 				svg.select("#actual").remove();
 				svg.select("#median").remove();
 
@@ -463,7 +466,8 @@
 
 		</script>
 
-		<!-- Would be nice to change button sizes to be bigger!! Add restart function -->
+
+		<!-- Sumit and Play Again buttons -->
 		<div>
 	  		<input class = "button" type="button" value="Submit" onclick="results()"/>
 		</div>

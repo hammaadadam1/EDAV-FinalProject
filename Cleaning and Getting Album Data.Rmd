@@ -1,0 +1,58 @@
+---
+title: "Cleaning Data_Danielle"
+author: "Danielle Su (ds3731)"
+date: "12/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Getting and cleaning album data
+
+The problems are indices of tracks that had issues getting the data. Most of these issues were unable to be resolved because the error was due to the way Spotify listed their data and the way the spotifyr function get_albums() was written. Since there were only 28 problems out of 2400 tracks, I did not think it was a huge issue to just skip them. The primary purpose of getting this data is to work with the album release date.
+
+```{r warning=FALSE}
+# Getting the album data - takes a LONG time to run, do not run
+album_df <- get_albums(get_tracks(class_df$track_name[1], class_df$artist_name[1])$album_id[1]) %>% select(album_name=name, album_id=id, album_label=label, album_date=release_date)
+
+problems = c(374, 588, 839, 885, 890, 908, 987, 999, 1186, 1190, 1237, 1954, 1957, 1959, 1960, 1963, 1966, 1971, 1973, 1974, 1982, 1984, 1985, 1989, 1996, 1998, 2352, 2391)
+
+for (i in 2:length(class_df$track_name)){
+  track <- get_tracks(class_df$track_name[i], class_df$artist_name[i])
+  
+  if (length(track)==0 | i %in% problems){
+    album_df[nrow(album_df)+1,] <- NA
+  }else{
+    temp <- get_albums(track$album_id[1]) %>% select(album_name=name, album_id=id, album_label=label, album_date=release_date)
+    album_df <- bind_rows(album_df, temp)
+  }
+}
+
+# Original dataframe I was adding to was called class_df in my code
+class_df <- bind_cols(class_df, album_df)
+```
+
+Code to set the album date to date format, create columns: album_year and album_decade. This is later used in my plots
+```{r}
+library(lubridate)
+class_df$album_date <- parse_date_time(class_df$album_date, c("%y%m%d", "%y"))
+class_df$album_date <- as.Date(class_df$album_date, format="%y-%m-%d")
+class_df <- class_df %>% mutate(album_year = year(album_date)) %>% mutate(album_decade = (album_year - album_year %% 10))
+```
+
+## Adding track ranking back
+
+When you pull the playlist information it is pulled in order of 1 to 100 with 1 being your most played song out of the whole year. I wanted to bring that ranking back because I subset on this in a graph. Additionally, 100 songs is a lot, and looking at my own playlist I know the really significant songs to me from that year are really the ones in the top 25.
+```{r}
+# Original data frame in my code was called class_df
+class_df <- class_df %>% mutate(rank = 0)
+
+for (i in 1:24){
+  for (j in 1:100){
+    class_df$rank[(i-1)*100+j] <- j
+  }
+}
+```
+
