@@ -176,3 +176,74 @@ size = 3, legend.position = "bottom", hjust = 1) +
 
 After some exploratory and qualitative assessment, we also want to analyze the quantitative relationships among those audio features. The above graph shows the  correlation among each pair of the features. It's not surprising that energy and loudness are the most positively correlated features, while energy and acousticness are the most negatively correlated features.  
 
+
+```{r}
+
+
+#select the track and artist variables variables
+track <- data %>% select(track_name, artist_name, Name)
+
+
+artist_df <- track %>%
+ group_by(artist_name) %>%
+ summarise(count = n()) %>%
+ arrange(-count)
+
+
+#bar graph
+ggplot(head(artist_df, 30) , aes(x=reorder(artist_name, -count), y= count)) +
+  geom_col(color="darkblue", fill="lightblue") +
+  ggtitle("Who are the most popular artists overall?") +
+  theme_minimal()+
+  xlab("Artist name") + 
+  ylab("Number of songs") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+artist_by_user_df <- track%>%
+ group_by(Name) %>%
+ summarise(artists = paste(sort(unique(artist_name)),collapse=","))
+
+artist_by_user_df <- artist_by_user_df %>%
+   mutate(artists = strsplit(as.character(artists), ",", useBytes = TRUE))
+
+all_artists = unique(track$artist_name)
+# 1097 artists
+
+#initialize the apperance variable: the # of users' playlists where this artist appears
+artist_df$appearance <-0
+
+
+for (i in 1: nrow(artist_df)){
+
+  for (j in 1:nrow(artist_by_user_df)){
+
+    curr_artist = artist_df$artist_name[i]
+    curr_artists = artist_by_user_df$artists[[j]]
+
+    if (curr_artist %in% curr_artists){
+      artist_df$appearance[i] = artist_df$appearance[i] +1
+
+    }
+  }
+}
+
+artist_df <- artist_df %>%
+ arrange(-appearance)
+
+artist_df
+
+#bar graph
+ggplot(head(artist_df, 30) , aes(x=reorder(artist_name, -appearance), y= appearance)) +
+  geom_col(color="darkblue", fill="lightblue") +
+  ggtitle("Which artists are users' favorites?") +
+  theme_minimal() +
+  xlab("Artist name") + 
+  ylab("Number of users") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+We also explored the most popular artists in the 2,400 songs. In the bar graph "Who are the most popular artists overall?", we observe that the most popular artist, The Chainsmokers, has 40 songs, followed by Kendrick Lamar and Drake, who have 38 and 27 songs, respectively. However, those numbers are not the most precise because two users' playlists can contain the same song from the same artist, and that song would have been counted twice. Therefore, we thought it would be more interesting to look at how frequently an artist appears in users' playlists, and this metric can better represent how popular an artist is among our users. In the corresponding bar graph "Which artists are users' favorites?", the top three artists are the same as the top three artists in the previous bar graph: Kendrick Lamar appeared in 11 users' playlists out of all 24 users, followed by Drake and The Chainsmokers, who appeared in 10 and 9 users' playlists, respectively. 
+
