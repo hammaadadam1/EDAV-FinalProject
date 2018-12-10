@@ -2,10 +2,10 @@
 title: "Spotify Project"
 author: "Hammaad Adam, Lea Collin, Ling (Kelly) He, Danielle Su"
 date: December 10, 2018
-output: pdf_document
+output: html_document
 ---
 
-All of the code for this project can be found [here](https://github.com/LeaCollin0518/EDAV-FinalProject).
+Note: All of the code for this project can be found here: https://github.com/LeaCollin0518/EDAV-FinalProject.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -50,14 +50,10 @@ lea_class_data <- read_csv("Final_DSI_Playlist.csv", col_names = TRUE)
 
 lea_class_data$rank <- NULL
 lea_class_data$album_label <- NULL
-lea_class_data$album_name1 <- NULL
 lea_class_data$album_id <- NULL
-lea_class_data$album_data <- NULL
-lea_class_data$album_name2 <- NULL
-lea_class_data$album_id1 <- NULL
-lea_class_data$album_label1 <- NULL
 lea_class_data$album_date <- NULL
-lea_class_data$album_date1 <- NULL
+lea_class_data$album_year <- NULL
+lea_class_data$album_decade <- NULL
 
 # cleaning up the data a bit
 
@@ -131,21 +127,21 @@ edav_not_top_50_songs <- select(edav_not_top_50_songs, -excluded_vars)
 
 ## Introduction
 
-  For our final project, we have decided to look at our class's Spotify data, specifically from the "Your Top Songs 2017" playlists. This is a playlist made by Spotify with each user's 100 most listened to songs in 2017. We were curious about the listening patterns of our class and the different metrics of each song along with how these metrics are correlated. 
+  For our final project, we have decided to look at our class' Spotify data, specifically from the "Your Top Songs 2017" playlists. This is a playlist made by Spotify with each user's 100 most listened to songs in 2017. We were curious about the listening patterns of our class and the different metrics of each song along with how these metrics are correlated. 
 
-  Our team members are Hammaad Adam, Lea Collin, Ling (Kelly) He, and Danielle Su. Lea contributed to cleaning the survey data and exploring what features make songs and artists popular for this year's EDAV class. Kelly worked on exploring general audio features of all the songs and some of the survey input data. Danielle worked on creating the initial data gathering survey and exploring trends within the class in terms of how students differ. Hammaad worked on exploring the commonalities ad key differences between different students' playlists, by songs, artists, and genre. Danielle and Kelly also created the interactive D3 component of the project. All group members contributed to writing this report. 
+  Our team members are Hammaad Adam, Lea Collin, Ling (Kelly) He, and Danielle Su. Lea contributed to cleaning the survey data and exploring what features make songs and artists popular for this year's EDAV class. Kelly worked on exploring general audio features of all the songs and some of the survey input data. Danielle worked on creating the initial data gathering survey and exploring trends within the class in terms of how students differ. Hammaad worked on exploring the commonalities and key differences between different students' playlists, by songs, artists, and genre. Danielle and Kelly also created the interactive D3 component of the project. All group members contributed to writing this report. 
 
 ## Data Description
 
-  Spotify's "Your Top Songs 2017" playlist was only created for users that met certain criteria. The criteria were that the user listened to 5 different artists, 30 different tracks, and 60 minutes of music from January 1st to November 1st. Note that this means all of December (and therefore likely a lot of holiday music) is not included in the data. 	
-	
-	We collected our data using Spotify's R API, with useful information linked [here](https://www.rcharlie.com/spotifyr/). If a user gives the API a user ID and a playlist ID, the API makes it extremely easy to get different attributes for each song on the playlist. Some obvious attributes include track name, artist name, etc. More interesting features, including the features we explored most, are: genre, danceability, valence, energy, loudness, etc. A more thorough description of these features can be found under **Audio Features**, later on in this report.
-	
-	To actually get our class' Spotify user ID's and playlist ID's, we sent out a survey giving detailed instructions on how to provide this information. We also asked people to put in extra information about themselves, such as age, gender, nationality, etc., so that we could include these in our analysis.
+Spotify's "Your Top Songs 2017" playlist was only created for users that met certain criteria. The criteria were that the user listened to 5 different artists, 30 different tracks, and 60 minutes of music from January 1st to November 1st. Note that this means all of December (and therefore likely a lot of holiday music) is not included in the data.
+  
+We collected our data using Spotify's R API, with useful information linked here: https://www.rcharlie.com/spotifyr/. If a user gives the API a user ID and a playlist ID, the API makes it extremely easy to get different attributes for each song on the playlist. Some obvious attributes include track name, artist name, etc. More interesting features, including the features we explored most, are: genre, danceability, valence, energy, loudness, etc. A more thorough description of these features can be found under **Audio Features**, later on in this report.
+
+To actually get our class' Spotify user ID's and playlist ID's, we sent out a survey giving detailed instructions on how to provide this information. We also asked people to put in extra information about themselves, such as age, gender, nationality, etc., so that we could include these in our analysis.
 
 ## Analysis of Data Quality
 
-As mentioned before, the Spotify API made our data collection process extremely easy. The API did not provide any missing values for the features that we looked into. The only features that were missing values would be columns like 'album image', which we did not look at during our analysis. 
+As mentioned before, the Spotify API made our data collection process extremely easy. The API did not provide any missing values for the features that we looked into. The only features that were missing values were columns such as 'album image', which we did not look at during our analysis. 
 Most of our data issues came from a small number of respondents to the survey and not having as many different variables to look at as we had initially hoped for. Below, we look at the different missing data patterns. 
 
 ```{r, fig.height = 6}
@@ -155,7 +151,7 @@ names(survey_data) <- c("Timestamp", "email", "uni", "age", "gender", "nationali
 visna(survey_data, sort = 'b')
 ```
 
-As we can see from this plot, missing the "otherPlatform" variable (and no other variables) is the most common missing pattern in the survey data. The "otherPlatform" column was used to see if people use other music-listening platforms different from Spotify. It is actually nice that this value is missing for so many users because it means that they are big users of Spotify. The second-most common pattern is to not have any columns missing. One person didn't give us their Spotify user ID or their playlist ID so we were not able to include them in our dataset. For the most part, this graph shows that we were able to capture the most pertinent information from our users. Though we were not able to collect as much data as we would have liked, the data we did collect was of very good quality in terms of what information we wanted. 
+As we can see from this plot, missing the "otherPlatform" variable (and no other variables) is the most common missing pattern in the survey data. The "otherPlatform" column was used to see if people use other music-listening platforms different from Spotify (such as Apple Music, Pandora, etc.). It is actually nice that this value is missing for so many users because it means that they are regular Spotify users. The second-most common pattern is to not have any columns missing. One person didn't give us their Spotify user ID or their playlist ID so we were not able to include them in our dataset. For the most part, this graph shows that we were able to capture the most pertinent information from our users. Though we were not able to collect as much data as we would have liked, the data we did collect was of fairly good quality in terms of what information we wanted. 
 
 We did quite a bit of analysis using artist's genre so we took a look at how many artists have this information available. As we see below, only 7.041667% of artists present in the dataset have missing genre information, or 169 out of 2400 rows in the dataset.
 
@@ -169,7 +165,7 @@ print (sum(is.na(data$artist_genres)))
 
 ### Data Cleaning
 
-  Before we get to the analysis, it is worth briefly dicussing our data cleaning process. The respondents to the survey were instructed on how to find, copy, and paste their user and playlist ID's from the Spotify application or Spotify webplayer. However, the actual ID's still needed to be extracted from the strings that were copied. In order to extract the ID's, we used R's **stringr** package and Regex. Once these ID's were extracted, it was straightforward to iterate through each ID, get the playlist features using the Spotify API, and progressively build up a dataframe with everyone's songs. We then pulled in additional information (e.g. release date, genre) for each track, once again using the Spotoify API. The code for this process can be found on [github](https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/lea-DataCleaning.R).
+  Before we get to the analysis, it is worth briefly dicussing our data cleaning process. The respondents to the survey were instructed on how to find, copy, and paste their user and playlist ID's from the Spotify application or Spotify webplayer. However, the actual ID's still needed to be extracted from the strings that were copied. In order to extract the ID's, we used R's **stringr** package and Regex. Once these ID's were extracted, it was straightforward to iterate through each ID, get the playlist features using the Spotify API, and progressively build up a dataframe with everyone's songs. We then pulled in additional information (e.g. release date, genre) for each track, once again using the Spotoify API. The code for this process can be found on github here: https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/lea-DataCleaning.R.
   
 ### Key Questions
 
@@ -218,10 +214,10 @@ df <- df %>%
   mutate(tempo=scales::rescale(tempo,to=c(0, 1)))
 ```
 
-```{r parcoord, fig.height=6, fig.width=6}
+```{r parcoord, fig.height=6, fig.width=8}
 ggparcoord(df, columns = 1:8, alphaLines = .2, 
            scale = "uniminmax", groupColumn = "gender", splineFactor = 10) +
-  ggtitle("Parallel Coordinate Plot by Gender") +
+  ggtitle("Parallel Coordinates Plot by Gender") +
   theme_minimal(15) +
   theme(legend.position = "bottom")+
   scale_color_manual(name="gender", 
@@ -251,11 +247,11 @@ df[,"clean_country"] = fct_recode(df[,"clean_country"], Canada ="CA")
 levels(df$clean_country)[!levels(df$clean_country) == "USA"]<- "OTHER"
 ```
 
-```{r parcoord2, fig.height=6, fig.width=6}
+```{r parcoord2, fig.height=6, fig.width=8}
 ggparcoord(df, columns = 1:8, alphaLines = .2, 
            scale = "uniminmax", groupColumn = "clean_country", 
            splineFactor = 10) +
-  ggtitle("Parallel Coordinate Plot by 2017 Location") +
+  ggtitle("Parallel Coordinates Plot by 2017 Location") +
   theme_minimal(15) +
   theme(legend.position = "bottom") +
   scale_color_manual(name="Country in 2017", 
@@ -485,7 +481,6 @@ top2017_artist_genres <- get_artists(top2017_artists[1])
 for(i in 2:length(top2017_artists)){
   if(TRUE){
     top2017_artist_genres = rbind(top2017_artist_genres, get_artists(top2017_artists[i]))
-    print(i)
   }
 }
 
@@ -556,7 +551,6 @@ top2017_artist_genres <- get_artists(top2017_artists[1])
 for(i in 2:length(top2017_artists)){
   if(TRUE){
     top2017_artist_genres = rbind(top2017_artist_genres, get_artists(top2017_artists[i]))
-    print(i)
   }
 }
 
@@ -644,26 +638,6 @@ ggplot(song_intersection, aes(x = Name, y = fct_rev(sharer))) +
 ```
 
 Each user is fairly unique: the largest degree of overlap between any two playlists is ~10%. Lea, Hammaad, and Yimin have the most songs in common, whereas Eric's taste is almost entirely distinct. 
-
-Another interesting question to ask is: how 'indie' is everyone in DSI? The best way to look at this is to look at how popular the tracks and artists are that each person listens to. The Cleveland dot plot below averages the track and artist popularity for each DSIers playlists. The plot reveals that Lea and Hammaad both listen to the most popular music (which is not too surprising since they have the most songs in common) and Eric listens to the leas popular music (again not surprising since he had the least number of songs in common with anyone else). An interesting thing to note from the graph is that Tom has a lower track popularity but one of the highest artist popularities. 
-
-```{r pop_dot_plot, fig.height = 8, fig.width = 10}
-avg_class_data <- display_class_data %>% group_by(Name) %>% summarise_at(vars(normalized_artist_pop, normalized_pop, danceability, energy, valence, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, normalized_tempo), funs(mean(., na.rm = TRUE)))
-
-names(avg_class_data) <- c("Name", "Artist Popularity", "Track Popularity", "Danceability", "Energy", "Valence", "Loudness"," Speechiness", "Acousticness", "Instrumentalness", "Tempo")
-
-tidy_avg <- avg_class_data %>% select(Name, `Track Popularity`, `Artist Popularity`) %>% 
-  arrange(`Track Popularity`) %>% 
-  mutate(Name = factor(Name, levels = .$Name)) %>% tidyr::gather(key = 'Category', value = 'Percentage', -Name)
-
-pop_cd <- ggplot(tidy_avg, aes(x = Percentage, y = Name, color = Category)) +
-          geom_point() + ylab("") + theme_minimal() +
-          ggtitle("Hammaad and Lea Are Basic AF") +
-        scale_color_manual(values=c("red", "blue")) +
-    theme(legend.title=element_text(size=15), legend.text=element_text(size=13))
-
-pop_cd
-```
 
 ### What are the key ways in which DSI students differ from one another?
 
@@ -870,8 +844,6 @@ grid.arrange(agdiv1, agdiv2, nrow =1 , ncol = 2)
 
 There seems to be a positive association between number of spanning genres and number of distinct artists (left panel). This makes sense, but is not particularly surprising. The chart on the right, however, is more interesting. While there does seem to be a generally positive association, it is not very strong. For example, a large number of people have ~40% of songs in their top genre, but the proportion represented by their top 10 artist varies widely. Our hypothesis is that with more sample, we would see clearer clusters. These clusters would represent artist-genre joint diversity: whether a user listens to a lot of artists across a bunch of different genres (high diversity) or a large number of artists across a small number of genres (medium diversity), or a small number of artists across a small number of genres (low diversity). 
 
-
-START OF DANIELLE'S SECTION!!!
 ```{r, include=FALSE}
 library(spotifyr)
 library(tidyverse)
@@ -884,11 +856,31 @@ access_token <- get_spotify_access_token()
 class_df <- read_csv('Final_DSI_Playlist.csv')
 ```
 
-In examining the differences between students in our DSI cohort, we wanted to see who listens to the most obscure music, or the most "indie", and who listens to the most popular must, or the most "mainstream". The best variable to do this with is Spotify's track popularity variable, this is a number assigned from 0 to 100 that is calculated based on an algorithm that takes the total number of streams for that tracks and weights more recent streams more heavily. The exact formula for this number is unknown, but it is our best measure in the dataset for how popular a song is. One caveat to this variable is that we pulled the track popularity when we built our dataset, and these playlists are from 2017, so the track_popularity is indicative of how popular that song is today rather than in 2017 when the student was listening to it. Therefore the results could also be interpreted as, who listens to the music that stays popular throughout a year's worth of time.
+In examining the differences between students in our DSI cohort, we wanted to see who listens to the most obscure music, or the most "indie", and who listens to the most popular music, or the most "mainstream". The best variable to do this with is Spotify's track popularity variable, this is a number assigned from 0 to 100 that is calculated based on an algorithm that takes the total number of streams for that track and weighs more recent streams more heavily. The exact formula for this number is unknown, but it is our best measure in the dataset for how popular a song is. One caveat to this variable is that we pulled the track popularity when we built our dataset, and these playlists are from 2017, so the track_popularity is indicative of how popular that song is today rather than in 2017 when the student was listening to it. Therefore the results could also be interpreted as, who listens to the music that stays popular throughout a year's worth of time.
+
+We first look at this variable in conjunction with artist popularity, another possible indicator someone's music tastes being "mainstream" or "indie". The Cleveland dot plot below averages the track and artist popularity for each DSIers playlists. The artist popularity metric is formed similarly to the track popularity metric by Spotify. The plot reveals that Lea and Hammaad both listen to the most popular music (which is not too surprising since they have the most songs in common) and Eric listens to the leas popular music (again not surprising since he had the least number of songs in common with anyone else). An interesting thing to note from the graph is that Tom has a lower track popularity but one of the highest artist popularities. 
+
+```{r pop_dot_plot, fig.height = 8, fig.width = 10}
+avg_class_data <- display_class_data %>% group_by(Name) %>% summarise_at(vars(normalized_artist_pop, normalized_pop, danceability, energy, valence, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, normalized_tempo), funs(mean(., na.rm = TRUE)))
+
+names(avg_class_data) <- c("Name", "Artist Popularity", "Track Popularity", "Danceability", "Energy", "Valence", "Loudness"," Speechiness", "Acousticness", "Instrumentalness", "Tempo")
+
+tidy_avg <- avg_class_data %>% select(Name, `Track Popularity`, `Artist Popularity`) %>% 
+  arrange(`Track Popularity`) %>% 
+  mutate(Name = factor(Name, levels = .$Name)) %>% tidyr::gather(key = 'Category', value = 'Percentage', -Name)
+
+pop_cd <- ggplot(tidy_avg, aes(x = Percentage, y = Name, color = Category)) +
+          geom_point() + ylab("") + theme_minimal() +
+          ggtitle("Hammaad and Lea Are Basic AF") +
+        scale_color_manual(values=c("red", "blue")) +
+    theme(legend.title=element_text(size=15), legend.text=element_text(size=13))
+
+pop_cd
+```
 
 Below we created 2 sets of boxplots - they are boxplots of the distribution of their playlist's popularity variables for each student in our dataset. You can see based on the first set which has track popularity that Lea listens to the most popular music in terms of having the highest median track popularity value and Eric has the lowest median track popularity. Additionally, from the boxplots you can see that some students such as Mert and Anonymous 1 have very large ranges whereas James and Hammaad's ranges are rather small in comparison.
 
-Additionally I made the same plot for the artist popularity variable, ordered in the same way as track popularity, so it is easy to compare. From Spotify's description, the artist popularity variable is determined by the track popularity so it should be a similar graph. However, when you compare, you can see that all ranges are smaller and in general they are on the higher end of the popularity variable. This could be explained by a few reasons, maybe artist popularity distributions in general are higher, or students could be listening to low popularity tracks but from artists that do have very high popularity tracks, or it could be a factor of the time difference. Perhaps the tracks that students listened to in 2017 are no longer very popular, but the artist has new tracks in 2018 that have brought the popularity variable up.
+Additionally we made the same plot for the artist popularity variable, ordered in the same way as track popularity, so it is easy to compare. From Spotify's description, the artist popularity variable is determined by the track popularity so it should be a similar graph. However, when you compare, you can see that all ranges are smaller and in general they are on the higher end of the popularity variable. This could be explained by a few reasons, maybe artist popularity distributions in general are higher, or students could be listening to low popularity tracks but from artists that do have very high popularity tracks, or it could be a factor of the time difference. Perhaps the tracks that students listened to in 2017 are no longer very popular, but the artist has new tracks in 2018 that have brought the artist's popularity variable up.
 
 ```{r fig.height=5}
 mytheme <- theme_minimal(16) +
@@ -912,9 +904,9 @@ ggplot(class_df, aes(fct_reorder(Name, track_popularity), artist_popularity)) +
 
 ```
 
-The next few graphs try to use the survey inputs to identify any trends within those survey answers. While the number of tracks in our dataset is sizeable (2400), they only come from 24 students, and when separating that into categories based on survey answers, it is hard to really identify any trends. We were mainly interested in the gender variable and the age variable. For gender, the distribution in the dataset is 8 females and 16 males. For age, the distribution in the dataset is age 21: 1, age 22: 4, age 23: 4, age 24: 5, age 25: 5, age 26: 2, age 28: 2. Therefore while the graphs using age are still interesting, it is hard to say any general trends, since if you're talking about 21 year olds it is really just that 1 specific person. Additionally the ages are all in the 21-28 range, so I wouldn't expect a huge amount of difference in their listening habits, but you can see some distinctions.
+The next few graphs try to use the survey inputs to identify any trends within those survey answers. While the number of tracks in our dataset is sizeable (2400), they only come from 24 students, and when separating that into categories based on survey answers, it is hard to really identify any trends. We were mainly interested in the gender variable and the age variable. For gender, the distribution in the dataset is 8 females and 16 males. For age, the distribution in the dataset is age 21: 1, age 22: 4, age 23: 4, age 24: 5, age 25: 5, age 26: 2, age 28: 2. Therefore while the graphs using age are still interesting, it is hard to note any general trends, since if you're talking about 21 year olds it is really just that 1 specific person. Additionally the ages are all in the 21-28 range, so we wouldn't expect a huge amount of difference in their listening habits, but you can see some distinctions.
 
-Below we made a mosaic plot of age and track popularity, which is binned into 4 quartiles since the original number is likely a percentile. You can see from the mosaic plot that there isn't much of a relationship between age and listening to popular or not popular tracks. It looks like 22 year olds listen to the most popular tracks, but this could also be because there is only 1 21 year old and at least 4 22 year olds. Therefore nothing conculsive can really be said about age and popularity. If given more time, we could collect a wider range of samples and test this again.
+Below we made a mosaic plot of age and track popularity, which is binned into 4 quartiles since the original number is likely a percentile. You can see from the mosaic plot that there isn't much of a relationship between age and listening to popular or not popular tracks. It looks like 22 year olds listen to the most popular tracks, but this could also be because there is only 1 21 year old and at least 4 22 year olds. Therefore, nothing conculsive can really be said about age and popularity. If given more time, we could collect a wider range of samples and test this again.
 
 ```{r}
 library(forcats)
@@ -937,12 +929,11 @@ ggplot(df) +
 
 ```
   
-Next, we wanted to explore the album data we were able to pull and seeing if there are any trends based on the year the album was release and therefore the song was release. 
+Next, we wanted to explore the album data we were able to pull and see if there are any trends based on the year the album was released and therefore when the song was released. 
 
-First, we explored album dates in relation to gender of the student. Below is a bar graphs of the number of frequency of the track and the decade the song was released, faceted by gender. You can see that the distribution looks similar but there is a little cluster of songs released in the 70s for the males - classic rock songs, no doubt. Since there are a lot more males than females in our dataset, I graphed the same thing again in terms of percentages. In that next graph you can now see that the females in our group have over 80% of their songs coming out of the 2010s decade. So it seems like everyone likes more recent music, but especially DSI females!
+First, we explored album dates in relation to gender of the student. Below is a bar graph of the number of plays of the track and the decade the song was released, faceted by gender. You can see that the distribution looks similar but there is a little cluster of songs released in the 70s for the males - classic rock songs, no doubt. Since there are a lot more males than females in our dataset, we graphed the same thing again in terms of percentages. In that next graph you can now see that the females in our group have over 80% of their songs coming out of the 2010s decade. So it seems like everyone likes more recent music, but especially DSI females!
 
 ```{r}
-
 # Getting total Male/Female counts to calculate percentages
 gender_count <- class_df %>% group_by(gender) %>% summarize(total=n())
 female_count <- as.integer(gender_count[1,2])
@@ -965,11 +956,11 @@ ggplot(class_df_grouped, aes(x=album_decade, y=Percent)) +
 
 ```
 
-Since the majority of the songs came out of alubms in the 2000s I wanted to do a deeper dive into the 2000s to see if there are any trends within years of the 2000s.
+Since the majority of the songs came out of alubms in the 2000s we wanted to do a deeper dive into the 2000s to see if there are any trends within years of the 2000s.
 
 In terms of gender, the distributions of the 2000s look similarly skewed. However, males have fatter tails in terms of having a higher percentage from 2000 to 2012, so while they are listening to more recent music, maybe they like to listen to throwback songs a little more than females. Additionally, now that we are zooming into the 2000s you can see that of the 2010s the majority of the songs are from 2016-2017, so either songs that came out the year of the playlist or songs that came out the year right before it. 
 
-I would also like to note that there are some album release dates in 2018, even though this was a playlist of top songs played in 2017. This is due to the fact that the way Spotify has tracked their album release dates, it was easiest to take the release date from the actual album, whereas it might have shown up on the playlist because the single came out in 2017, but the album did not come out until 2018.
+We would also like to note that there are some album release dates in 2018, even though this was a playlist of top songs played in 2017. This is due to the fact that the way Spotify has tracked their album release dates, it was easiest to take the release date from the actual album, whereas it might have shown up on the playlist because the single came out in 2017, but the album did not come out until 2018.
 
 ```{r}
 # Deeper Dive into the 2000s
@@ -985,7 +976,7 @@ ggplot(year2000_grouped, aes(x=album_year, y=Percent)) +
   labs(xlab='Year of Album Release', title='Similar distributions, but males like to throwback a little more')
 ```
 
-Since the gender distributions were similar, even though age cannot be generalized, we wanted to see if age had any trends with album release year. The below graphs are faceted by age and you can see that generally as you increas in age, the skew to 2016-2017 is less and less extreme and students listen to more and more songs released in the early 2000s. In order to better compare, we made a plot with density curves of each age. Here you can see similar trends, but you can really see that 26 year olds have the lowest density around 2016-2017 and are much more evenly spread out than the others. You can also see that 21 and 22 year olds have the lowest percentages of songs from 2000 to about 2007.
+Since the gender distributions were similar, even though age cannot be generalized, we wanted to see if age had any trends with album release year. The below graphs are faceted by age and you can see that generally as you increase in age, the skew to 2016-2017 is less and less extreme and students listen to more and more songs released in the early 2000s. In order to better compare, we made a plot with density curves of each age. Here you can see similar trends, but you can really see that 26 year olds have the lowest density around 2016-2017 and are much more evenly spread out than the others. You can also see that 21 and 22 year olds have the lowest percentages of songs from 2000 to about 2007.
 
 ```{r}
 # Creating new dataframe with grouped values by year and gender
@@ -1018,7 +1009,7 @@ ggplot(year2000clean, aes(x = album_year, color=Student_Age)) +
 ```
 
 
-We were curious to see how all these factors: age, track popularity, and album release date come together, so we plotted them on a scatterplot with date on the x-axis and popularity on the y-axis. The points are colored by the age of the student. In accordance with the previous plots, most of the songs are clustered around 2016-2017, and they range the full spectrum of track popularity with a big cluster in the 30-75 range and a small clusterin the 0-15 range. Generally, it looks like if younger students listen to older songs they at least have a track popularity of 40 or above. The only students that listen to tracks released before 1991 and are below 40 in popularity are 24 and 25 year olds, you can see this even better in the interactive and subsetted graph described below.
+We were curious to see how all these factors: age, track popularity, and album release date come together, so we plotted them on a scatterplot with date on the x-axis and popularity on the y-axis. The points are colored by the age of the student. In accordance with the previous plots, most of the songs are clustered around 2016-2017, and they range the full spectrum of track popularity with a big cluster in the 30-75 range and a small clusterin the 0-15 range. Generally, it looks like if younger students listen to older songs they at least have a track popularity of 40 or above. The only students that listen to tracks released before 1991 and are below 40 in popularity are 24 and 25 year olds. You can see this even better in the interactive and subsetted graph described below.
 
 In order to see specifics of these outliers, and to better visualize the graph, we subset the data so it only includes the top 25 songs in each person's playlist, presumably these are their top 25 favorite songs of 2017. Then, we used plotly and displayed the track name and artist name so we could see what exactly these points represented. The oldest song in this subset is "I Fall in Love too Easily" by Chet Baker with a popularity level of 62. The highest track popularity for a song that came out before 2000 is 81 and that is for "Under the Bridge" by Red Hot Chili Peppers. The highest track popularity overall is 89 and is the song Jocelyn Flores by XXXTENTACION. The lowest track popularity for a song that came out before 2000 is 0 and is the song "Come on Home" by Joan Armatrading.
 
@@ -1054,8 +1045,6 @@ ggplotly(g)
 ```
 
 
-
-
 ### Interactive Component
 
 Link to the Interactive Component: https://bl.ocks.org/daniellesu/bda312bb5a71159d3bc7483c278ddd96/070d7b9a58c3813c5c624997856a1e88376faeb2
@@ -1069,7 +1058,6 @@ The instructions/rules of the game and the audio features are explained on the w
 There are also several things that we attempted and would like to improve in the future. A small caveat in the technical execution is that when the user drags the bar up and down, if the bar is dragged below 0.0 by accident and the user lets go of the click, the user wouldn't be able to drag it back up. However, you are able to click "Play Again" to refresh the screen and get all the bars back. Another issue is if you keep clicking "Submit" over and over again, it will keep appending new bars with the actual values - if we had more time we would edit this so that wouldn't happen. Additionally, if you do not select a song and you click submit, the bars will will fade, in the future we would add a warning that says you have not selected a song and would not let the bars change. If we had more time, we would try to display the numbers of the actual values and the median above the bars. It would also be interesting to calculate a metric that describes how close a user's guesses are to the actual values, indicating how strong the user's music sense is and display that as a result.
 
 We also considered universal design when we created this interactive component. We wanted to make sure that our game is accessible to users with color vision deficiency (CVD). Therefore, we used Color Oracle, a color deficiency simulator, to test our interactive component on all 3 types of color deficiency. In the end, we selected the colors of the bars in such a way that the bars with actual values are still differentiable from the colors of the bars with a user's guesses. Furthermore, we have the transition of the bars with actual values go from bottom to top so that the users can see them coming up and see where they are stopping in relation to the bars with their guesses. With this design, users with CVD would have no problem playing our game. However, we could not make this game accessible to users with hearing impairment, since it asks the user to guess values after listening to a song. In the future, we would like to find an alternative way for those users to enjoy the game.
-
 
 
 ## Conclusion
