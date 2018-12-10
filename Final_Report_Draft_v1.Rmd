@@ -10,7 +10,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r import, include = FALSE}
-
 library(spotifyr)
 library(tidyverse)
 library(gridExtra)
@@ -43,17 +42,101 @@ artist_genres = artist_genres %>%
 data = data %>% left_join(artist_genres, by = "artist_name")
 ```
 
+```{r, include = FALSE, cache = TRUE}
+lea_class_data <- read_csv("Final_DSI_Playlist.csv", col_names = TRUE)
+
+lea_class_data$rank <- NULL
+lea_class_data$album_label <- NULL
+lea_class_data$album_name1 <- NULL
+lea_class_data$album_id <- NULL
+lea_class_data$album_data <- NULL
+lea_class_data$album_name2 <- NULL
+lea_class_data$album_id1 <- NULL
+lea_class_data$album_label1 <- NULL
+lea_class_data$album_date <- NULL
+lea_class_data$album_date1 <- NULL
+
+# cleaning up the data a bit
+
+x <- lea_class_data$loudness
+lea_class_data$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+lea_class_data$normalized_pop <- lea_class_data$track_popularity/100
+lea_class_data$normalized_artist_pop <- lea_class_data$artist_popularity/100
+x <- lea_class_data$tempo
+lea_class_data$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- lea_class_data$instrumentalness 
+lea_class_data$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+
+display_class_data <- lea_class_data[which(lea_class_data$`Display` == 'Yes'),]
+
+# selecting only the continuous variables from the dataset
+cont_var <- lea_class_data %>% select(normalized_pop, danceability, energy, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, valence, normalized_tempo)
+
+names(cont_var) <- c("popularity", "dance", "energy", "loud", "speech", "acoustic", "instrumental", "valence", "tempo")
+
+top_ten_artists <- as.data.frame(rev(sort(table(lea_class_data$artist_name)))[1:10])
+top_ten_artists$Var1 <- as.factor(top_ten_artists$Var1)
+top_fifty_songs <- as.data.frame(rev(sort(table(lea_class_data$track_name)))[1:50])
+top_fifty_songs$Var1 <- as.factor(top_fifty_songs$Var1)
+
+lea_class_data$`Artist Popularity` <- ifelse(lea_class_data$artist_name %in% top_ten_artists$Var1, "EDAV Top 10", "EDAV Not Top 10")
+lea_class_data$`Song Popularity` <- ifelse(lea_class_data$track_name %in% top_fifty_songs$Var1, "EDAV Top 50", "EDAV Not Top 50")
+
+edav_top_50_songs <- lea_class_data[which(lea_class_data$`Song Popularity` == 'EDAV Top 50'), ]
+edav_not_top_50_songs <- lea_class_data[which(lea_class_data$`Song Popularity` == 'EDAV Not Top 50'), ]
+edav_top_10_artists <- lea_class_data[which(lea_class_data$`Artist Popularity` == 'EDAV Top 10'), ]
+edav_not_top_10_artists <- lea_class_data[which(lea_class_data$`Artist Popularity` == 'EDAV Not Top 10'), ]
+
+edav_top_50_songs$playlist_name <- 'EDAV Top 50 Songs'
+edav_not_top_50_songs$playlist_name <- 'EDAV Not Top 50 Songs'
+edav_top_10_artists$playlist_name <- 'EDAV Top 10 Artists'
+edav_not_top_10_artists$playlist_name <- 'EDAV Not Top 10 Artists'
+
+us_top_50 <- get_playlist_audio_features('spotifycharts', '37i9dQZEVXbLRQDuF5jeBp')
+global_top_50 <- get_playlist_audio_features('spotifycharts','37i9dQZEVXbMDoHDwVN2tF')
+top_2017 <- get_playlist_audio_features('spotify', '37i9dQZF1DX5nwnRMcdReF')
+
+# normalizing all variables to be between 0 and 1
+x <- us_top_50$loudness
+us_top_50$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+us_top_50$normalized_pop <- us_top_50$track_popularity/100
+x <- us_top_50$tempo
+us_top_50$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- us_top_50$instrumentalness 
+us_top_50$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+
+x <- global_top_50$loudness
+global_top_50$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+global_top_50$normalized_pop <- global_top_50$track_popularity/100
+x <- global_top_50$tempo
+global_top_50$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- global_top_50$instrumentalness 
+global_top_50$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+
+x <- top_2017$loudness
+top_2017$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+top_2017$normalized_pop <- top_2017$track_popularity/100
+x <- top_2017$tempo
+top_2017$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- top_2017$instrumentalness 
+top_2017$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
+
+excluded_vars <- c('gender', 'user_id', 'location2017', 'nationality', 'undergrad', 'age', 'useFrequency', 'Name', 'Display', 'artist_uri', 'artist_genres', 'Name', 'Song Popularity', 'Artist Popularity', 'artist_popularity', 'artist_num_followers', 'normalized_artist_pop')
+edav_top_50_songs <- select(edav_top_50_songs, -excluded_vars)
+edav_not_top_50_songs <- select(edav_not_top_50_songs, -excluded_vars)
+```
+
 ## Introduction
 
   For our final project, we have decided to look at our class's Spotify data, specifically from the "Your Top Songs 2017" playlists. This is a playlist made by Spotify with each user's 100 most listened to songs in 2017. We were curious about the listening patterns of our class and the different metrics of each song along with how these metrics are correlated. 
 
-  Our team members are Hammaad Adam, Lea Collin, Ling (Kelly) He, and Danielle Su. Lea contributed to cleaning the survey data and exploring what features make songs and artists popular for this year's EDAV class. Kelly worked on exploring general audio features of all the songs and some of the survey input data. Danielle worked on creating the initial data gathering survey and exploring trends within the class in terms of how student differ. Hammaad worked on exploring the commonalities ad key differences between different students' playlists, by songs, artists, and genre. Danielle and Kelly also created the interactive D3 component of the project.
+  Our team members are Hammaad Adam, Lea Collin, Ling (Kelly) He, and Danielle Su. Lea contributed to cleaning the survey data and exploring what features make songs and artists popular for this year's EDAV class. Kelly worked on exploring general audio features of all the songs and some of the survey input data. Danielle worked on creating the initial data gathering survey and exploring trends within the class in terms of how students differ. Hammaad worked on exploring the commonalities ad key differences between different students' playlists, by songs, artists, and genre. Danielle and Kelly also created the interactive D3 component of the project. All group members contributed to writing this report. 
 
 ## Data Description
 
   Spotify's "Your Top Songs 2017" playlist was only created for users that met certain criteria. The criteria were that the user listened to 5 different artists, 30 different tracks, and 60 minutes of music from January 1st to November 1st. Note that this means all of December (and therefore likely a lot of holiday music) is not included in the data. 	
 	
-	We collected our data using Spotify's R API, with useful information linked [here](https://www.rcharlie.com/spotifyr/). If a user gives the API a user ID and a playlist ID, the API makes it extremely easy to get different attributes for each song on the playlist. Some obvious attributes include track name, artist name, etc. More interesting features, including the features we explored most, are: genre, danceability, valence, energy, loudness, etc. For a more comprehensive list of these features, visit: [Spotify track features](https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/).
+	We collected our data using Spotify's R API, with useful information linked [here](https://www.rcharlie.com/spotifyr/). If a user gives the API a user ID and a playlist ID, the API makes it extremely easy to get different attributes for each song on the playlist. Some obvious attributes include track name, artist name, etc. More interesting features, including the features we explored most, are: genre, danceability, valence, energy, loudness, etc. A more thorough description of these features can be found under **Audio Features**, later on in this report.
 	
 	To actually get our class' Spotify user ID's and playlist ID's, we sent out a survey giving detailed instructions on how to provide this information. We also asked people to put in extra information about themselves, such as age, gender, nationality, etc., so that we could include these in our analysis.
 
@@ -63,14 +146,14 @@ data = data %>% left_join(artist_genres, by = "artist_name")
 
 ### Data Cleaning
 
-  Before we get to the analysis, it is worth briefly dicussing our data cleaning process. The respondents to the survey were instructed on how to find, copy, and paste their user and playlist ID’s from the Spotify application or Spotify webplayer. However, the actual ID’s still needed to be extracted from the strings that were copied. In order to extract the ID’s, we used R’s “stringr” package and Regex. Once these ID’s were extracted, it was straightforward to iterate through each ID, get the playlist features using the Spotify API, and progressively build up a dataframe with everyone’s songs. We then pulled in additional information (e.g. release date, genre) for each track, once again using the Spotoify API. The code for this process can be found on [github](https://l.messenger.com/l.php?u=https%3A%2F%2Fgithub.com%2FLeaCollin0518%2FEDAV-FinalProject&h=AT3MGiRM8KH89hVszJEo_gqW7DfgH-hBm50Hgl7jIz4WrV5niIYKuhEgphWp2eKdmXF9ugi6OPCQdwVW5KtW8mHfcGPmCWpwj5riADj5RtUZpHRochKKFxBr6WzUbPNiqn0FaYsK0IucOpd6ckZiwTb6).
+  Before we get to the analysis, it is worth briefly dicussing our data cleaning process. The respondents to the survey were instructed on how to find, copy, and paste their user and playlist ID's from the Spotify application or Spotify webplayer. However, the actual ID's still needed to be extracted from the strings that were copied. In order to extract the ID's, we used R's **stringr** package and Regex. Once these ID's were extracted, it was straightforward to iterate through each ID, get the playlist features using the Spotify API, and progressively build up a dataframe with everyone's songs. We then pulled in additional information (e.g. release date, genre) for each track, once again using the Spotoify API. The code for this process can be found on [github](https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/lea-DataCleaning.R).
   
 ### Key Questions
 
 Now that we've discussed our data collection and cleaning, let's dive into the analysis. Our data lends itself to a multitude of fascinating projects, and narrowing our scope of focus was a real challenge. However, we ultimately decided to focus on the key questions that allow us to comprehensively characterize the music listening habits of our DSI class. To this end, our analysis was guided by four overarching questions: 
 
-1. What are the distinctive features of a song popular within the DSI cohort?
-2. How do DSI listening habits compare with global trends?
+1. What are the distinctive features of a song that is popular within the DSI cohort?
+2. How do DSI listening habits compare with US/global trends?
 3. How similar are DSI students in their music preferences?
 4. What are the key ways in which DSI students differ from one another?
 
@@ -78,7 +161,7 @@ Now that we've discussed our data collection and cleaning, let's dive into the a
 
 **Audio Features**
 
-One of the main questions we wanted to address was what makes a DSI song popular? To begin answering this question, we examined the various audio features of the 2400 songs collected from our survey and how they correlate with each other and other survey input variables. In particular, we examined the following nine audio features: danceability, energy, loudness, valence, tempo, acousticness, speechiness, and instrumentalness. Most of these metrics have values between 0 and 1, representing the level of each variable (closer to 0 means low and closer to 1 means high). Loudness and tempo however needed to be normalized in order to be between 0 and 1. We excluded the liveness variable since it detects the presence of an audience in the recording rather than measuring any characteristic of the song, which we thought was not a particularly interesting feature. The descriptions of those audio features can be found in the table below:
+One of the main questions we wanted to address was "what makes a DSI song popular?" To begin answering this question, we examined the various audio features of the 2400 songs collected from our survey and how they correlate with each other and other survey input variables. In particular, we examined the following nine audio features: danceability, energy, loudness, valence, tempo, acousticness, speechiness, and instrumentalness. Most of these metrics have values between 0 and 1, representing the level of each variable (closer to 0 means low and closer to 1 means high). Loudness and tempo however needed to be normalized in order to be between 0 and 1. We excluded the liveness variable since it detects the presence of an audience in the recording rather than measuring any characteristic of the song, which we thought was not a particularly interesting feature. The descriptions of those audio features can be found in the table below:
 
 ```{r, include = FALSE}
 library(knitr)
@@ -125,7 +208,7 @@ ggparcoord(df, columns = 1:8, alphaLines = .2,
                                    "Male"="#66FFFF"))
 ```
 
-We also drew a parallel coordinate plot with "Country in 2017" as the "groupColumn" to determine whether the location of Spotify users affect their music taste. Due to our limited data, we do not have enough country information other than USA, so we decided to group all the other countries into on category called "OTHER". Half of the 24 users were in USA in 2017. The two country groups are more intertwined together compared to the gender groups in the other plot, indicating that country did not have much impact on users' music taste (within our limited sample). 
+We also drew a parallel coordinate plot with "Country in 2017" as the "groupColumn" to determine whether the location of Spotify users affect their music tastes. Due to our limited data, we do not have enough country information other than for the USA, so we decided to group all the other countries into one category called "OTHER". Half of the 24 users were in USA in 2017. The two country groups are more intertwined compared to the gender groups in the previous plot, indicating that country did not have much impact on users' music taste (within our limited sample). 
 
 ```{r parcoord2data, include = FALSE}
 locations <- unique(data$location2017)
@@ -158,7 +241,7 @@ ggparcoord(df, columns = 1:8, alphaLines = .2,
                                    "OTHER"="#3399FF"))
 ```
 
-After this inital assessment, we wanted to analyze the quantitative relationships between the audio features. The below graph shows the correlation amongst each pair of features. It's not surprising that energy and loudness are the most positively correlated features, while energy and acousticness are the most negatively correlated features. As the name suggests, acousticness is a measure of how likely the track is to be acoustic; generally acoustic songs are considered to be more mellow and less high-energy. 
+After this initial assessment, we wanted to analyze the quantitative relationships between the audio features. The graphs below show the correlation amongst each pair of features. It's not surprising that energy and loudness are the most positively correlated features, while energy and acousticness are the most negatively correlated features. As the name suggests, acousticness is a measure of how likely the track is to be acoustic; generally acoustic songs are considered to be more mellow and less high-energy. 
 
 ```{r}
 library(pgmm)
@@ -177,9 +260,19 @@ size = 3, legend.position = "bottom", hjust = 1) +
   ggtitle("How are audio features correlated?") 
 ```
 
+```{r, include = FALSE, cache = TRUE}
+scatter_vars <- ggpairs(cont_var, title = "", axisLabels = "show", progress = FALSE)
+```
+
+```{r, fig.width = 10, fig.height = 8}
+scatter_vars
+```
+
+It's interesting that track popularity is not really correlated with any of the variables as this makes us wonder what Spotify considers when scoring this. What's interesting is that Spotify claims that it calculates danceability based on the tempo but not only is there almost no correlation between danceability and tempo, but they are even slightly negatively correlated! This might be interesting to look more into as a future direction or given more time. 
+
 **Popular Artists**
 
-We now turn our attention to exploring the most popular artists in the 2,400 songs. There are two ways to measure popularity: how many songs each artist has in the class' combined playlist (i.e. all 2,400 songs), and how many distinct playlists the artist appears in. The second is likely a better measure of overall popularity, as it is less sensitive to outliers. For example, one user listening to 15 songs by the same artist would make it seem popular using the first measure, even if no other student listened to that artist. The results of both these measures, however, are quite similar, as illustrated in the bar charts below. 
+We now turn our attention to exploring the most popular artists in the 2400 songs. There are two ways to measure popularity: how many songs each artist has in the class' combined playlist (i.e. all 2400 songs), and how many distinct playlists the artist appears in. The second is likely a better measure of overall popularity, as it is less sensitive to outliers. For example, one user listening to 15 songs by the same artist would make it seem popular using the first measure, even if no other student listened to that artist. The results of both these measures, however, are quite similar, as illustrated in the bar charts below. 
 
 ```{r}
 track <- data %>% select(track_name, artist_name, Name)
@@ -229,6 +322,34 @@ ggplot(head(artist_df, 30) , aes(x=reorder(artist_name, -appearance), y= appeara
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+When looking at what makes an artist popular for DSI, we also wanted to see if the popularity of the artist on Spotify matched the popularity of the artist in DSI. To look at this, we have a density curve of artist popularity (Spotify's metric) between popular and less popular artists in DSI.
+
+```{r, include = FALSE}
+lea_all_data <- rbind(edav_top_10_artists, edav_not_top_10_artists)
+
+diff_art_pop <- ggplot(lea_all_data, aes(x = normalized_artist_pop, fill = playlist_name)) + 
+  geom_density(alpha = 0.4) + xlab("Artist Popularity") + ylab("Density") +
+  guides(fill=guide_legend(title="Playlist Name"))
+```
+
+```{r}
+diff_art_pop
+```
+
+From this graph, we see that the artists that are popular with DSI students are also considered to be popular by Spotify, so DSI's aritst tastes match closely with the rest of Spotify users. 
+
+```{r, include = FALSE}
+diff_art_dance <- ggplot(lea_all_data, aes(x = normalized_tempo, fill = playlist_name)) + 
+  geom_density(alpha = 0.4) + xlab("Tempo") + ylab("Density") +
+  guides(fill=guide_legend(title="Playlist Name"))
+```
+
+```{r}
+diff_art_dance
+```
+
+From the graph above, we see something that is slightly inconsistent with what we saw with the most popular DSI songs. We see here that the most popular DSI artists actually have songs that are generally slower paced than less popular songs in DSI, which is an interesting discrepancy.
+
 **Popular Genres**
 
 Another interesting question to explore is how popular various genres are within the cohort. We plot the 10 most popular genres below, along with the proportion of all songs that fall into each. An important note is that Spotify's genre information is at an artist level, not a track level. A partial consequence of this fact is that one song can be tagged as multiple genres, as the same artist can dabble in multiple musical styles. However, this is not necessarily inaccurate, as the song-genre mapping is not strictly one-to-one. For example, "Bad and Boujee" by Migos is predominantly a trap song, but can also be said to be rap, hip hop, or pop rap. Further, songs by and large reflect the primary genre of their artist. As a result, while classifying genres at an artist level is not perfect, it is good enough to draw broad conclusions. 
@@ -277,22 +398,79 @@ While pop is overwhelmingly the most popular genre, there is little difference b
 
 ### How do DSI listening habits compare with global trends?
 
-Now that we have a good sense about the features of a popular DSI song, we would like to investigate how these preferences are different from the population at large. We find that there are two key points of differentiation: loudness and genre. 
+The parallel coordinate plots presented earlier raises the question: are there features specific to DSI songs that are more prominent than in other popular music? To begin answering this question, we shall compare the most popular songs within DSI to the songs that were most popular in the country and the world in 2017. In order to do this, we got the most common 50 songs from the dataset we created. We defined the most common songs simply as the songs that appeared the highest number of times in the dataset. 
+
+Once we got the top DSI songs, we looked at different features and different plotting techniques to see if there was anything unique about these songs. We decided to compare the songs to three of Spotify's playlists. We compared these to: "Global Top 50", "United States Top 50" and "Top Tracks 2017", since these are playlists with some of the most popular music on Spotify. We chose to compare the continuous features that Spotify's API provides. Because these are continuous and we were comparing across different playlists, we created density curves and boxplots to easily compare between all of the different playlists. Note that although we looked at all of the features and made graphs for them, only the most revealing are included in this report below.
+
+We find that there are three key points of differentiation: loudness, tempo and genre.
 
 **Loudness**
 
-  The parallel coordinate plots presented earlier raise the question: are there features specific to DSI songs that are more prominent than in other popular music? To begin answering this questions, we shall compare the most popular songs within the DSI to the songs that were most popular in the country and the world in 2017. In order to do this, we got the most common 50 songs and most common 10 artists from the dataset we created. We defined the most common songs simply as the songs that appeared the highest number of times in the dataset. We could not exactly do this for the artist because an artist could show up multiple times on a single user’s playlist if they have multiple songs on the playlist from that artist. Instead, we grouped by user id and then got the artists that appeared the highest number of times. This ensured that an artist only showed up once per user. We thought this was a more accurate representation of artist popularity within our class. (still need to actually do this). The code to get these songs and artists follows. 
-  
-	INSERT SONG/ARTIST EXTRACTION CODE HERE
-	
-	Once we got the top DSI songs, we looked at different features and different plotting techniques to see if there was anything unique about these songs. We decided to compare the songs to three of Spotify’s playlists. We compared these to: “Global Top 50”, “United States Top 50” and “Top Tracks 2017”. Since these are playlists with some of the most popular music on Spotify, we thought it made sense to compare our playlists to it. We chose to compare the continuous features that Spotify’s API provides. Because these are continuous and we were comparing across different playlists, we created density curves and boxplots to easily compare between all the different playlists. Though most of the graphs showed that our class’ tastes match up closely with all other Spotify users, there was one feature that stood out: loudness. For whatever reason, DSIers are very into loud music. Even the songs that were not amongst the most popular in our class were still louder than songs on the other three playlists. 
-	
-	INSERT CODE AND GRAPHS HERE
+```{r, include = FALSE}
+lea_all_data <- rbind(edav_top_50_songs, us_top_50)
+lea_all_data <- rbind(lea_all_data, global_top_50)
+lea_all_data <- rbind(lea_all_data, top_2017)
 
+diff_loud_songs <- ggplot(lea_all_data, aes(x = normalized_loudness, fill = playlist_name)) +
+  geom_density(alpha = 0.4) + xlab("Loudness") + ylab("Density") +
+  guides(fill=guide_legend(title="Playlist Name"))
+```
+
+```{r}
+diff_loud_songs
+```
+
+```{r, include = FALSE}
+lea_all_data <- rbind(lea_all_data, edav_not_top_50_songs)
+edav_loud_box <- ggplot(lea_all_data, aes(x=reorder(playlist_name, -1*normalized_loudness, FUN=median), y=normalized_loudness)) + 
+  geom_boxplot(fill='#CCCCFF') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ggtitle("EDAV, Keep It Down") +
+  xlab("Playlist") + ylab("Loudness") + 
+  theme_minimal(15) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r, fig.height = 6}
+edav_loud_box
+```
+
+As we can see above, DSIers, for whatever reason, really enjoy loud music. From the loudness boxplot, we see that even when we include the 'less popular' EDAV songs, they are still generally much louder than the songs on the other playlists. What's even more interesting and is revealed from both graphs is that there is not even a wide range in loudness of music for DSIers compared to the other playlists. Almost all the songs are concentrated around fairly high loudness values. Given more time, it could be interesting to look at what songs specifically are causing this trend in the playlists. 
+
+**Tempo**
+
+Thought not as drastic a difference as loudness, we found that DSIers also enjoy slightly faster music than the rest of Spotify users. This finding was again revealed by a density curve and boxplot, included below. 
+
+```{r, include = FALSE}
+lea_all_data <- rbind(edav_top_50_songs, us_top_50)
+lea_all_data <- rbind(lea_all_data, global_top_50)
+lea_all_data <- rbind(lea_all_data, top_2017)
+diff_tempo_songs <- ggplot(lea_all_data, aes(x = normalized_tempo, fill = playlist_name)) +
+  geom_density(alpha = 0.4) + xlab("Tempo") + ylab("Density") +
+  guides(fill=guide_legend(title="Playlist Name"))
+```
+
+```{r}
+diff_tempo_songs
+```
+
+```{r, include = FALSE}
+lea_all_data <- rbind(lea_all_data, edav_not_top_50_songs)
+edav_tempo_box <- ggplot(lea_all_data, aes(x = reorder(playlist_name, -1*normalized_tempo, FUN = median), y = normalized_tempo)) +
+  geom_boxplot(fill='#CCCCFF') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_minimal(15) +
+  xlab("Playlist") + ylab("Tempo") + ggtitle("Why are you in such a rush?") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r, fig.height = 6}
+edav_tempo_box
+```
+  
 **Genre**
 
-
-We can also compare genre popularity for the DSI cohort vs the global Spotify population. The following dot plot compares genres within the DSI playlist to Spotify's Top Tracks of 2017 playlist. 
+We can also compare genre popularity for the DSI cohort vs the global Spotify population. The following dot plot compares genres within the DSI playlist to Spotify's "Top Tracks of 2017" playlist. 
 
 ```{r genre_compare, message = FALSE, warning = FALSE}
 # Join genres to top playlists
@@ -418,7 +596,7 @@ We now shift our attention to the latter two questions, which focus on the simil
 
 ### How similar are DSI students in their music preferences?
 
-First, we'd like to examine the overlap in musical taste between DSI students. An obvious first question to ask is: how similar are any two individuals' playlists? One way to answer this question is by determining how many songs any two users have in common. We can summarize this in the following heatmap, where the colour of each cell represents the number of songs the two playlists have in common. For the sake of contrast, we omit the songs shared by a playlist and itself (the diagonal elements of the matrix).
+First, we'd like to examine the overlap in musical tastes between DSI students. An obvious first question to ask is: how similar are any two individuals' playlists? One way to answer this question is by determining how many songs any two users have in common. We can summarize this in the following heatmap, where the colour of each cell represents the number of songs the two playlists have in common. For the sake of contrast, we omit the songs shared by a playlist and itself (the diagonal elements of the matrix).
 
 ```{r heatmap, message = FALSE, warning = FALSE}
 
@@ -465,9 +643,31 @@ ggplot(song_intersection, aes(x = Name, y = fct_rev(sharer))) +
 
 Each user is fairly unique: the largest degree of overlap between any two playlists is ~10%. Lea, Hammaad, and Yimin have the most songs in common, whereas Eric's taste is almost entirely distinct. 
 
+Another interesting question to ask is: how 'indie' is everyone in DSI? The best way to look at this is to look at how popular the tracks and artists are that each person listens to. The Cleveland dot plot below averages the track and artist popularity for each DSIers playlists. The plot reveals that Lea and Hammaad both listen to the most popular music (which is not too surprising since they have the most songs in common) and Eric listens to the leas popular music (again not surprising since he had the least number of songs in common with anyone else). An interesting thing to note from the graph is that Tom has a lower track popularity but one of the highest artist popularities. 
+
+```{r, include = FALSE}
+avg_class_data <- display_class_data %>% group_by(Name) %>% summarise_at(vars(normalized_artist_pop, normalized_pop, danceability, energy, valence, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, normalized_tempo), funs(mean(., na.rm = TRUE)))
+
+names(avg_class_data) <- c("Name", "Artist Popularity", "Track Popularity", "Danceability", "Energy", "Valence", "Loudness"," Speechiness", "Acousticness", "Instrumentalness", "Tempo")
+
+tidy_avg <- avg_class_data %>% select(Name, `Track Popularity`, `Artist Popularity`) %>% 
+  arrange(`Track Popularity`) %>% 
+  mutate(Name = factor(Name, levels = .$Name)) %>% tidyr::gather(key = 'Category', value = 'Percentage', -Name)
+
+pop_cd <- ggplot(tidy_avg, aes(x = Percentage, y = Name, color = Category)) +
+          geom_point() + ylab("") + theme_minimal() +
+          ggtitle("Hammaad and Lea Are Basic AF") +
+        scale_color_manual(values=c("red", "blue")) +
+    theme(legend.title=element_text(size=15), legend.text=element_text(size=13))
+```
+
+```{r, fig.height = 8, fig.width = 10}
+pop_cd
+```
+
 ### What are the key ways in which DSI students differ from one another?
 
-A key feature of every playlist is diversity: the range of music a student listens to. We can define diversity in a number of ways, but for the purposes of this project, we will view it in two ways: variety of artists, and variety of genres. Let's first look at aritst diversity. The two charts below illustrate the range in artist diversity between different users. The graph on the left shows the total number of artists represented in a user's playlist; the graph on the right shows the proportion of a playlist accounted for by a user's 10 favourite artists.
+A key feature of every playlist is diversity: the range of music a student listens to. We can define diversity in a number of ways, but for the purposes of this project, we will view it in two ways: variety of artists and variety of genres. Let's first look at aritst diversity. The two charts below illustrate the range in artist diversity between different users. The graph on the left shows the total number of artists represented in a user's playlist; the graph on the right shows the proportion of a playlist accounted for by a user's 10 favourite artists.
 
 ```{r artistsdiv1, message = FALSE, warning = FALSE}
 
@@ -516,7 +716,7 @@ ggplot(user_artist_concentration, aes(y=nartists, x=top10)) +
     xlab("Proportion of Songs from Top 10 Artists")
 ```
 
-We now turn our attention to genres. Measuring a playlists genre diversity is tricker than artist diversity, as each song can have multiple genre tags. In order to overcome this, we introduce the concept of spanning genres: the minimum number of distinct genres required to span a user's entire playlist. (Note: the code to compute genre diversity is fairly complex, and is not shown here for the sake of brevity. Please see the appendix for details). The chart on the left shows the genre spans for each user. We can also measure genre diversity by the percentage of a playlist's songs that fall into the user's favourite genres, as shown in the chart on the right.
+We now turn our attention to genres. Measuring a playlist's genre diversity is trickier than artist diversity, as each song can have multiple genre tags. In order to overcome this, we introduce the concept of spanning genres: the minimum number of distinct genres required to span a user's entire playlist. (Note: the code to compute genre diversity is fairly complex, and is not shown here for the sake of brevity. Please see the appendix for details). The chart on the left shows the genre spans for each user. We can also measure genre diversity by the percentage of a playlist's songs that fall into the user's favourite genres, as shown in the chart on the right.
 
 ```{r spanninggenres, include = FALSE}
 
@@ -668,12 +868,24 @@ grid.arrange(agdiv1, agdiv2, nrow =1 , ncol = 2)
 
 ```
 
-There seems to be a positive association between number of spanning genres and number of distinct artists (left panel). This makes sense, but is not particularly surprising. The chart on the right, however, is more interesting. While there does seem to be a generally positive association, it is not very strong. For example, a large number of people have ~40% of songs in their top genre, but the proportion represented by their top 10 artist varies widely. Our hypothesis is that with more sample, we would see clearer clusters. These clusters would represent artist-genre joint diversityL whether a user listens to a lot of artists across a bunch of different genres (high diversity) or a large number of artists across a small number of genres (medium diversity), or a small number of artists across a small number of genres (low diversity). 
+There seems to be a positive association between number of spanning genres and number of distinct artists (left panel). This makes sense, but is not particularly surprising. The chart on the right, however, is more interesting. While there does seem to be a generally positive association, it is not very strong. For example, a large number of people have ~40% of songs in their top genre, but the proportion represented by their top 10 artist varies widely. Our hypothesis is that with more sample, we would see clearer clusters. These clusters would represent artist-genre joint diversity: whether a user listens to a lot of artists across a bunch of different genres (high diversity) or a large number of artists across a small number of genres (medium diversity), or a small number of artists across a small number of genres (low diversity). 
+
+### Interactive Component
+
+For our interactive component, we decided to make a game where the users can gain general knowledge about the audio features of a song as well as interesting trends of popular songs in DSI 2017 playlists. We used D3 to build this interactive component.  
+Specifically, we made a DSI 2017 Spotify playlist with the top 10 songs out of all 2400 songs we collected from users. In this game, a user is asked to play a song from the DSI 2017 playlist, select the song from the dropdown list, and guess the values of eight audio features by dragging the bars (between 0.0 and 1.0) in a bar plot where each bar corresponds to one audio feature. Once the user finishes guessing, s/he can click "Submit", and the actual values and the median values (of all 2400 songs) of those audio features will display in the bar plot. The user can then click "Play Again", select another song from the dropdown list, and repeat the guessing process.
+
+The instructions/rules of the game and the audio features are explained on the webpage, so that the users can easily navigate through the page and play the game. We also made some adjustments to the data to facilitate this game. Particularly, we normalized the values of three audio features, loudness, tempo, and track popularity, so that all the values fall between 0.0 and 1.0 (inclusive), and the bars of all audio features are on the same scale.
+
+There are also several things that we attempted and would like to improve in the future. A small caveat in the technical execution is that when the user drags the bar up and down, if the bar is dragged below 0.0 by accident, the user wouldn't be able to drag it back up. However, the actual values and the medians won't be affected by the users' bars. In addition, we think it would be helpful to display the numbers of the actual values and the median above the bars. It would also be interesting to calculate a metric that describes how close a user's guesses are to the actual values, indicating how strong the user's music sense is.
+
+We also considered universal design when we created this interactive component. We wanted to make sure that our game is accessible to users with color vision deficiency (CVD). Therefore, we used color oracle, a color deficiency simulator, to test our interactive component on all 3 types of color deficiency. In the end, we selected the colors of the bars in such a way that the bars with actual values are still differentiable from the colors of the bars with a user's guesses. Furthermore, we have the transition of the bars with actual values go from bottom to top so that the users can see them coming up and see where they are stopping in relation to the bars with their guesses. With this design, users with CVD would have no problem playing our game. However, we could not make this game accessible to users with hearing impairment, since it asks the user to guess values after listening to a song. In the future, we would like to find an alternative way for those users to enjoy the game.
+
 
 ## Conclusion
 
-  The main limitation of our project is that we didn’t collect as much data from our classmates as we would have liked. We ended up collecting playlist information from 24 users (including ourselves). We attribute the lack of responses in part to the fact that Spotify was not accessible to everyone in 2017. For example, Spotify is not supported in China. This was not absolutely detrimental to our project, however, because there are still 100 songs per playlist and people’s music taste varied enough that we had a large number of songs to analyze.
+  The main limitation of our project is that we didn't collect as much data from our classmates as we would have liked. We ended up collecting playlist information from 24 users (including ourselves). We attribute the lack of responses in part to the fact that Spotify was not accessible to everyone in 2017. For example, Spotify is not supported in China. This was not absolutely detrimental to our project, however, because there are still 100 songs per playlist and people's music taste varied enough that we had a large number of songs to analyze.
   
-  Given more time, we would have also analyzed Spotify users’ “Your Wrapped 2018”, which is the exact same concept as the “Your Top Songs 2017” playlist. We did not do this as the 2018 playlist was recently released. We wanted to do this to be able to analyze if people’s tastes had changed over time and if so, in what ways.
+  Given more time, we would have also analyzed Spotify users' "Your Wrapped 2018", which is the exact same concept as the "Your Top Songs 2017" playlist. We did not do this as the 2018 playlist was recently released. We wanted to do this to be able to analyze if people's tastes had changed over time and if so, in what ways.
   
   Through this project, we learned a lot about how to collect data through an API and use it in R. We also learned how to combine data from different sources as we had to combine the survey data with what we could get from the API. We learned more about our cohort and their propensity for loud music.
