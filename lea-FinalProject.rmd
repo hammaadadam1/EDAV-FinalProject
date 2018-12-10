@@ -629,3 +629,16 @@ edav_energy_box <- ggplot(all_data, aes(x = reorder(playlist_name, -1*energy, FU
   xlab("Playlist") + ylab("Energy")
 edav_energy_box
 ```
+
+Adding averages to help with interactive component
+
+```{r}
+top_10 <- read_csv("top_10.csv", col_names =  TRUE)
+averages <- class_data %>% summarise_at(vars(danceability, energy, normalized_loudness, valence, normalized_tempo, acousticness, speechiness, normalized_pop), funs(median(., na.rm = TRUE)))
+averages$track_name <- "all_dsi"
+averages$artist_name <- "dsi"
+names(averages) <- c("danceability", "energy", "loudness", "valence", "tempo", "acousticness", "speechiness", "track_popularity", "track_name", "artist_name")
+averages <- averages[c(9, 10, 1:8)]
+top_10 <- rbind(top_10, averages)
+write.csv(top_10, file = "top_10v2.csv")
+```
