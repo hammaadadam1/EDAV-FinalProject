@@ -63,9 +63,9 @@
 	 		<li> Step 3: Venture a guess!
 		 	</li>
 
-		 	Note : Once you submit your guess, you can see how close you were to the actual answers and how the audio features of that song compares to the median over all DSI songs.
-		 	
 
+		 	Note : Once you submit your guess, you can see how close you were to the actual answers and how the audio features of that song compares to the median over all DSI songs.
+		 
 	 	</ul>
 
 	 
@@ -116,6 +116,7 @@
 
 	<select class = "dropdown" id= "selected">
         <option disabled selected value> -- Select a song -- </option>                                    
+
   		<option name= "song" value="humble">HUMBLE.</option>
   		<option name= "song" value="shapeofyou">Shape of You</option>
   		<option name= "song" value="starboy">Starboy</option>
@@ -132,6 +133,7 @@
 	</div>
 
 	<h3>Step 3: Venture a guess!  </h3>
+
 
 		<p> After you listen to the song, you can drag each bar (feature) to the your guessed value. Once you finished dragging all the bars, click the "Submit" button, and you will see the actual answers for that song, as well as the median audio feature values over all DSI songs. You can click "Play Again" to refresh and guess again for another song! </p>
 
@@ -350,6 +352,7 @@
 
 			};
 
+
 			// Function when click submit, to get the actual values
 
 			function results(){
@@ -357,7 +360,7 @@
 
 				//get the value for the song 
 				resultdata = eval(song_value)
-
+        
 				svg.select(".plot").selectAll("rect")
 				.transition()
 				.duration(1500)
@@ -433,11 +436,12 @@
 
 			}
 
+
 			//	 Restart/Play Again Function
 			function restart(){
 				svg.selectAll("rect").remove();
 				svg.selectAll("line").remove();
-
+        
 				svg.select("#actual").remove();
 				svg.select("#median").remove();
 
@@ -461,6 +465,7 @@
 			}
 
 		</script>
+
 
 		<!-- Sumit and Play Again buttons -->
 		<div>
