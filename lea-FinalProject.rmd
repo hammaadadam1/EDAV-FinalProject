@@ -12,8 +12,8 @@ For this project, we will be using the Spotify API and the R package for it, Spo
 ```{r, include = FALSE}
 library(spotifyr)
 # input your own spotify client id and spotify client secret to be able to use Spotify's API
-Sys.setenv(SPOTIFY_CLIENT_ID = 'b273df75336c485596266c68d3e7c1c2')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = 'e88980163181450eb429c2f3f4723f90')
+Sys.setenv(SPOTIFY_CLIENT_ID = '')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '')
 
 access_token <- get_spotify_access_token()
 ```
@@ -629,6 +629,7 @@ edav_energy_box <- ggplot(all_data, aes(x = reorder(playlist_name, -1*energy, FU
   xlab("Playlist") + ylab("Energy")
 edav_energy_box
 ```
+<<<<<<< HEAD
 
 Adding averages to help with interactive component
 
@@ -642,3 +643,5 @@ averages <- averages[c(9, 10, 1:8)]
 top_10 <- rbind(top_10, averages)
 write.csv(top_10, file = "top_10v2.csv")
 ```
+=======
+>>>>>>> 0030704ff575d374ba4d6472f67a0a22ebdcf65a
