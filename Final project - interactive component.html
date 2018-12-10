@@ -2,11 +2,12 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>Final project - interactive component</title>
+		<title>Explore Audio Features of Top DSI Songs</title>
+		<meta name="author" content="Danielle Su and Kelly He">
+		<meta name="description" content="EDAV Final Project - interactive component">
 		<script src="https://d3js.org/d3.v4.min.js"></script>
 
 	</head>
-
 
 
 	<style>
@@ -17,11 +18,26 @@
 
 		}
 
+		.button{
+			background-color: #006666;
+  			border: none;
+  			color: white;
+  			padding: 5px 5px;
+  			text-align: center;
+  			text-decoration: none;
+  			display: inline-block;
+  			font-size: 16px;
+  			margin: 5px 5px;
+		}
 
+		.dropdown {
+			background-color: #006666;
+			border: none;
+  			color: white;
+  			padding: 15px 15px;
+  			text-align: center;
+  			font-size: 16px;
 
-
-		.dropdown select option[disabled]{
-  			display: none; 
 		}
 
 
@@ -47,14 +63,14 @@
 	 		<li> Step 3: Venture a guess!
 		 	</li>
 
-		 	<li> Step 4: See how close you were to the actual answer and how that song compares to the averages over all DSI songs.
-		 	</li>
+		 	Note : Once you submit your guess, you can see how close you were to the actual answers and how the audio features of that song compares to the median over all DSI songs.
+		 	
 
 	 	</ul>
 
 	 
 
-	  <h2>Description of Audio features</h2>
+	  <h2>Description of Audio Features</h2>
 
 	 <div class="features">
 
@@ -65,13 +81,13 @@
 	 	<li> Energy: Energy represents a perceptual measure of intensity and activity. Values range from 0.0 to 1.0, with 1.0 being the highest energy.
 	 	</li>
 
-	 	<li> Loudness: Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values range between -60 and 0 db, with 0 being the loudest.
+	 	<li> Loudness: Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values range between -60 and 0 db, with 0 being the loudest. The values are normalized to 0.0 and 1.0, with 1.0 being the loudest. 
 	 	</li>
 
 	 	<li> Valence: Valence describes the musical positiveness conveyed by a track. Values range from 0.0 to 1.0, with 1.0 being the most positive/happy/cheerful.
 	 	</li>
 
-	 	<li> Tempo: Tempo represents the overall estimated tempo of a track in beats per minute (BPM). Values typically range from 0 to 250 bpm.
+	 	<li> Tempo: Tempo represents the overall estimated tempo of a track in beats per minute (BPM). Values typically range from 0 to 250 bpm. The values are normalized to 0.0 and 1.0, with 1.0 being the highest tempo.
 	 	</li>
 
 	 	<li> Acousticness: Acousticness is a confidence measure of whether the track is acoustic. Values range from 0.0 to 1.0, with 1.0 being the most acoustic.
@@ -82,6 +98,8 @@
 
 	 	<li> Track_Popularity: Spotify's track popularity rating transformed from 0 to 100 to 0.0 to 1.0. 
 	 	</li>
+
+	 	Note : Since all values are given between 0.0 and 1.0 and on the same scale, that is the y-axis below and the audio features are on the x-axis.
 
 	 </ul>
 
@@ -94,15 +112,15 @@
 		<h3>Step 2: Select the song you picked.</h3>
 
 
-	<div class = "dropdown">
+	<div>
 
-	<select id= "selected">
-                                              
-  		<option name= "song" value="humble">HUMBLE</option>
+	<select class = "dropdown" id= "selected">
+        <option disabled selected value> -- Select a song -- </option>                                    
+  		<option name= "song" value="humble">HUMBLE.</option>
   		<option name= "song" value="shapeofyou">Shape of You</option>
   		<option name= "song" value="starboy">Starboy</option>
-  		<option name= "song" value="another day of sun">Another Day Of Sun - From "La La Land" Soundtrack</option>
-  		<option name= "song" value="bad and boujee">Bad and Boujee (feat. Lil Uzi Vert) </option>
+  		<option name= "song" value="anotherdayofsun">Another Day Of Sun - From "La La Land" Soundtrack</option>
+  		<option name= "song" value="badandboujee">Bad and Boujee (feat. Lil Uzi Vert) </option>
   		<option name= "song" value="despacito">Despacito - Remix </option>
   		<option name= "song" value="paris">Paris</option>
   		<option name= "song" value="slide">Slide (feat. Frank Ocean & Migos)</option>
@@ -115,25 +133,22 @@
 
 	<h3>Step 3: Venture a guess!  </h3>
 
+		<p> After you listen to the song, you can drag each bar (feature) to the your guessed value. Once you finished dragging all the bars, click the "Submit" button, and you will see the actual answers for that song, as well as the median audio feature values over all DSI songs. You can click "Play Again" to refresh and guess again for another song! </p>
+
 		<script type="text/javascript">
 
-			var song_value = 'humble';
+			var song_value = "";
 		
 			//get the value of the dropdown list
 			d3.select("select").on("change", function(){
     			song_value = d3.select("#selected").node().value;
 
-    			//for testing
-    			console.log(song_value);
-    			d3.select("#test").text(song_value);
-
+   
 			});
 
-			//order of features
+			//Feature list: danceability, energy, loudness, valence, tempo, acousticness, speechiness, track_popularity
 
-			//danceability, energy, loudness, valence, tempo, acousticness, speechiness, track_popularity
-
-			//features of the top 10 songs and all DSI
+			//features of the top 10 songs and all DSI medians
 			var anotherdayofsun = [{key: 'Danceability', value: 0.588}, 
 									{key: 'Energy', value: 0.742}, 
 									{key: 'Loudness', value: 0.17345050899999997}, 
@@ -234,16 +249,6 @@
 								{key: 'Track Popularity', value: 0.52}];
 
 
-			var resultdata = song_value
-			if (song_value == "humble"){
-				resultdata = humble;
-			}
-			if (song_value == "shape of you"){
-				resultdata = shapeofyou;
-			}
-			if (song_value == "starboy"){
-				resultdata = starboy;
-			}
 
 
 			//  Width and height of svg
@@ -280,13 +285,6 @@
 				.append("svg")
 				.attr("width", w)
 				.attr("height", h)
-
-			// svg.append("rect")
-			// 	.attr("x", 0)
-			// 	.attr("y", 0)
-			// 	.attr("width", w)
-			// 	.attr("height", h)
-			// 	.attr("fill", "white");				
 			
 			//    Create axes
 			svg.append("g")
@@ -298,6 +296,7 @@
 				.attr("class", "xAxis")
 				.attr("transform", `translate (${margin.left}, ${h - margin.bottom})`)
 				.call(xAxis);
+			
 			
 			//	Create initial bars
 			var bardata = [{key: 'Danceability', value:.05}, 
@@ -316,6 +315,7 @@
 				.selectAll("rect")
 				.data(bardata, d => d.key);
 
+
 			bars.enter().append("rect")
 				.attr("x", d => xScale(d.key))
 				.attr("y", d => yScale(d.value))
@@ -329,21 +329,35 @@
 
 			function dragstart(d){
 				d3.select(this).raise().classed("active", true);
+
+
 			};
 
 			function dragging(d){
+
+				//for draggable limits
+				ynew = d3.event.y > (h - 2*margin.top) ? (h - 2*margin.top) : d3.event.y < 0 ? 0 : d3.event.y;
+
 				d3.select(this)
-					.attr("y", d.y = d3.event.y)
-					.attr("height", d => innerHeight - d3.event.y);
+					.attr("y", d.y = ynew)
+					.attr("height", d => innerHeight - ynew);
+
+
 			};
 
 			function dragend(d){
 				d3.select(this).classed("active", false);
+
 			};
 
-			//	This function isn't working right now, not selecting the bars, eventually it should add new bars with the actual values, was just using color to test the functionality of this
+			// Function when click submit, to get the actual values
 
 			function results(){
+				var resultdata = [];
+
+				//get the value for the song 
+				resultdata = eval(song_value)
+
 				svg.select(".plot").selectAll("rect")
 				.transition()
 				.duration(1500)
@@ -360,18 +374,20 @@
 				bars.enter()
 					.append("rect")
 					.attr("x", d => xScale(d.key))
-					.attr("y", d => yScale(d.value))
+					.attr("y", yScale(0))
 					.attr("width", xScale.bandwidth())
-					.attr("height", d => innerHeight - yScale(d.value))
+					.attr("height", innerHeight - yScale(0))
 					.attr("fill", "#ffcc66")
-					.attr("fill-opacity", 0)
+					.attr("fill-opacity", .6)
 					.transition()
 					.delay(1500)
-					.duration(1500)
-					.attr("fill-opacity", .6);
+					.duration(2000)
+					.attr("y", d => yScale(d.value))
+					.attr("height", d => innerHeight - yScale(d.value));
 
 				svg.append("text")
 					.text("Actual Values")
+					.attr("id", "actual")
 					.style("fill", "#F8AD00")
 					.style("font-size", 12)
 					.attr("x", innerWidth+margin.left+10)
@@ -405,6 +421,7 @@
 
 				svg.append("text")
 					.text("Median of all DSI songs")
+					.attr("id", "median")
 					.style("fill", "#006666")
 					.style("font-size", 12)
 					.attr("x", innerWidth+margin.left+10)
@@ -416,22 +433,44 @@
 
 			}
 
-			//	 Not done yet!
+			//	 Restart/Play Again Function
 			function restart(){
+				svg.selectAll("rect").remove();
+				svg.selectAll("line").remove();
+
+				svg.select("#actual").remove();
+				svg.select("#median").remove();
+
+				var bars = svg.append("g")
+					.attr("class", "plot")
+					.attr("transform", `translate (${margin.left}, ${margin.top})`)
+					.selectAll("rect")
+					.data(bardata, d => d.key);
+
+				bars.enter().append("rect")
+					.attr("x", d => xScale(d.key))
+					.attr("y", d => yScale(d.value))
+					.attr("width", xScale.bandwidth())
+					.attr("height", d => innerHeight - yScale(d.value))
+					.attr("fill", "#FA7268")
+					.call(d3.drag()
+						.on("start", dragstart)
+						.on("drag", dragging)
+						.on("end", dragend));
 
 			}
 
 		</script>
 
-		<!-- Would be nice to change button sizes to be bigger!! Add restart function -->
-		<div class = "submit">
-	  		<input type="button" value="Submit" onclick="results()"/>
+		<!-- Sumit and Play Again buttons -->
+		<div>
+	  		<input class = "button" type="button" value="Submit" onclick="results()"/>
 		</div>
 
-		<div class = "restart">
-	  		<input type="button" value="Play Again" onclick="restart()"/>
+		<div >
+	  		<input class = "button" type="button" value="Play Again" onclick="restart()"/>
 		</div>
 
-		<p></p>
+		
 	</body>
 </html>
