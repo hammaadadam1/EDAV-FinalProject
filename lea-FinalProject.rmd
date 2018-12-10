@@ -319,7 +319,18 @@ Now that the data is cleaned up, I can perform a more extensive data analysis. I
 setwd("~/Columbia/EDAV/FinalProject/EDAV-FinalProject")
 library(tidyverse)
 # this file include track genre and the student's name
-class_data <- read_csv("PlaylistNameGenre.csv", col_names = TRUE)
+lea_class_data <- read_csv("Final_DSI_Playlist.csv", col_names = TRUE)
+
+lea_class_data$rank <- NULL
+lea_class_data$album_label <- NULL
+lea_class_data$album_name1 <- NULL
+lea_class_data$album_id <- NULL
+lea_class_data$album_data <- NULL
+lea_class_data$album_name2 <- NULL
+lea_class_data$album_id1 <- NULL
+lea_class_data$album_label1 <- NULL
+lea_class_data$album_date <- NULL
+lea_class_data$album_date1 <- NULL
 ```
 
 #### Exploring Danceability
@@ -336,26 +347,20 @@ The danceability histogram shows that the data is slightly left-skewed with only
 
 ```{r}
 # cleaning up the data a bit
-class_data$X1 <- NULL
 
-normalize1 <- function(x){
-  return (x - min(x))/(max(x) - min(x))
-}
+x <- lea_class_data$loudness
+lea_class_data$normalized_loudness <- (x-min(x))/(max(x)-min(x))
+lea_class_data$normalized_pop <- lea_class_data$track_popularity/100
+lea_class_data$normalized_artist_pop <- lea_class_data$artist_popularity/100
+x <- lea_class_data$tempo
+lea_class_data$normalized_tempo <- (x-min(x))/(max(x)-min(x))
+x <- lea_class_data$instrumentalness 
+lea_class_data$normalized_instrumentalness <- (x-min(x))/(max(x)-min(x))
 
-normalize2 <- function(x){
-  return (x/100)
-}
-
-class_data$normalized_loudness <- normalize1(class_data$loudness)
-class_data$normalized_pop <- normalize2(class_data$track_popularity)
-class_data$normalized_artist_pop <- normalize2(class_data$artist_popularity)
-class_data$normalized_tempo <- normalize1(class_data$tempo)
-class_data$normalized_instrumentalness <- normalize1(class_data$instrumentalness)
-
-display_class_data <- class_data[which(class_data$`Display` == 'Yes'),]
+display_class_data <- lea_class_data[which(lea_class_data$`Display` == 'Yes'),]
 
 # selecting only the continuous variables from the dataset
-cont_var <- class_data %>% select(normalized_pop, danceability, energy, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, valence, normalized_tempo)
+cont_var <- lea_class_data %>% select(normalized_pop, danceability, energy, normalized_loudness, speechiness, acousticness, normalized_instrumentalness, valence, normalized_tempo)
 
 names(cont_var) <- c("popularity", "dance", "energy", "loud", "speech", "acoustic", "instrumental", "valence", "tempo")
 ```
@@ -417,8 +422,8 @@ Many of the variables are uncorrelated or very weakly correlated. The strongest 
 Now that we've looked a bit at how features relate to each other, I want to know a bit more about the most popular artists (popular amongst EDAV students), and see if these artists have any track features in common compared to other artists. I'll probably take a look at the top 10 artists and compare these features to the rest of the artists. We can similarly do something for the top 10 songs (and I probably will do so). NOTE: should get the most popular artist by grouping by the user id and then counting how many times the artist shows up. 
 
 ```{r}
-top_ten_artists <- as.data.frame(rev(sort(table(class_data$artist_name)))[1:10])
-top_ten_songs <- as.data.frame(rev(sort(table(class_data$track_name)))[1:50])
+top_ten_artists <- as.data.frame(rev(sort(table(lea_class_data$artist_name)))[1:10])
+top_ten_songs <- as.data.frame(rev(sort(table(lea_class_data$track_name)))[1:50])
 top_ten_artists$Var1 <- as.factor(top_ten_artists$Var1)
 top_ten_songs$Var1 <- as.factor(top_ten_songs$Var1)
 ```
@@ -444,13 +449,13 @@ song_chart
 I think what will be easiest to be able to observe the differences between artists that are amongst the most popular and others is to make a new column that is just true or false based on if the artist is in the top 10 or not. I'll do the same thing for the top songs as well. 
 
 ```{r}
-class_data$`Artist Popularity` <- ifelse(class_data$artist_name %in% top_ten_artists$Var1, "EDAV Top 10", "EDAV Not Top 10")
-class_data$`Song Popularity` <- ifelse(class_data$track_name %in% top_ten_songs$Var1, "EDAV Top 50", "EDAV Not Top 50")
+lea_class_data$`Artist Popularity` <- ifelse(lea_class_data$artist_name %in% top_ten_artists$Var1, "EDAV Top 10", "EDAV Not Top 10")
+lea_class_data$`Song Popularity` <- ifelse(lea_class_data$track_name %in% top_ten_songs$Var1, "EDAV Top 50", "EDAV Not Top 50")
 
-edav_top_50_songs <- class_data[which(class_data$`Song Popularity` == 'EDAV Top 50'), ]
-edav_not_top_50_songs <- class_data[which(class_data$`Song Popularity` == 'EDAV Not Top 50'), ]
-edav_top_10_artists <- class_data[which(class_data$`Artist Popularity` == 'EDAV Top 10'), ]
-edav_not_top_10_artists <- class_data[which(class_data$`Artist Popularity` == 'EDAV Not Top 10'), ]
+edav_top_50_songs <- lea_class_data[which(lea_class_data$`Song Popularity` == 'EDAV Top 50'), ]
+edav_not_top_50_songs <- lea_class_data[which(lea_class_data$`Song Popularity` == 'EDAV Not Top 50'), ]
+edav_top_10_artists <- lea_class_data[which(lea_class_data$`Artist Popularity` == 'EDAV Top 10'), ]
+edav_not_top_10_artists <- lea_class_data[which(lea_class_data$`Artist Popularity` == 'EDAV Not Top 10'), ]
 
 edav_top_50_songs$playlist_name <- 'EDAV Top 50 Songs'
 edav_not_top_50_songs$playlist_name <- 'EDAV Not Top 50 Songs'

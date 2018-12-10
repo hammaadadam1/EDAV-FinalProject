@@ -1,6 +1,7 @@
 ---
 title: "Spotify Project"
 author: "Hammaad Adam, Lea Collin, Danielle Su, Ling (Kelly) He"
+date: December 10, 2018
 output: html_document
 ---
 
@@ -44,17 +45,17 @@ data = data %>% left_join(artist_genres, by = "artist_name")
 
 ## Introduction
 
-  For our final project, we have decided to look at our class’ Spotify data, specifically from the “Your Top Songs 2017” playlists. This is a playlist made by Spotify with each users’ 100 most listened to songs in 2017. We were curious about the listening patterns of our class and the different metrics of each song along with how these metrics are correlated. 
+  For our final project, we have decided to look at our class's Spotify data, specifically from the "Your Top Songs 2017" playlists. This is a playlist made by Spotify with each user's 100 most listened to songs in 2017. We were curious about the listening patterns of our class and the different metrics of each song along with how these metrics are correlated. 
 
-  Our team members are Hammaad Adam, Lea Collin, Ling “Kelly” He, and Danielle Su. Lea contributed to cleaning the survey data and exploring what features make songs and artists popular for this year’s EDAV class. Kelly worked on exploring general audio features of all the songs and some of the survey input data. Danielle worked on creating the initial data gathering survey and exploring trends within the class in terms of how student differ. Hammaad worked on exploring the commonalities ad key differences between different students' playlists, by songs, artists, and genre. Danielle and Kelly also created the interactive D3 component of the project.
+  Our team members are Hammaad Adam, Lea Collin, Ling (Kelly) He, and Danielle Su. Lea contributed to cleaning the survey data and exploring what features make songs and artists popular for this year's EDAV class. Kelly worked on exploring general audio features of all the songs and some of the survey input data. Danielle worked on creating the initial data gathering survey and exploring trends within the class in terms of how student differ. Hammaad worked on exploring the commonalities ad key differences between different students' playlists, by songs, artists, and genre. Danielle and Kelly also created the interactive D3 component of the project.
 
 ## Data Description
 
-  Spotify’s “Your Top Songs 2017” playlist was only created for users that met certain criteria. The criteria were that the user listened to 5 different artists, 30 different tracks, and 60 minutes of music from January 1st to November 1st. Note that this means all of December (and therefore likely a lot of holiday music) is not included in the data. 	
+  Spotify's "Your Top Songs 2017" playlist was only created for users that met certain criteria. The criteria were that the user listened to 5 different artists, 30 different tracks, and 60 minutes of music from January 1st to November 1st. Note that this means all of December (and therefore likely a lot of holiday music) is not included in the data. 	
 	
-	We collected our data using Spotify’s R API, with useful information linked [here](https://www.rcharlie.com/spotifyr/). If a user gives the API a user ID and a playlist ID, the API makes it extremely easy to get different attributes for each song on the playlist. Some obvious attributes include track name, artist name, etc. More interesting features, including the features we explored most, are: genre, danceability, valence, energy, loudness, etc. For a more comprehensive list of these features, visit: [Spotify track features](https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/).
+	We collected our data using Spotify's R API, with useful information linked [here](https://www.rcharlie.com/spotifyr/). If a user gives the API a user ID and a playlist ID, the API makes it extremely easy to get different attributes for each song on the playlist. Some obvious attributes include track name, artist name, etc. More interesting features, including the features we explored most, are: genre, danceability, valence, energy, loudness, etc. For a more comprehensive list of these features, visit: [Spotify track features](https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/).
 	
-	To actually get our class’ Spotify user ID’s and playlist ID’s, we sent out a survey giving detailed instructions on how to provide this information. We also asked people to put in extra information about themselves, such as age, gender, nationality, etc., so that we could include these in our analysis.
+	To actually get our class' Spotify user ID's and playlist ID's, we sent out a survey giving detailed instructions on how to provide this information. We also asked people to put in extra information about themselves, such as age, gender, nationality, etc., so that we could include these in our analysis.
 
 ## Analysis of Data Quality
 
