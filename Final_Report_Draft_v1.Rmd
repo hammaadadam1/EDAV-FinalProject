@@ -1,0 +1,678 @@
+---
+title: "Spotify Project"
+author: "Hammaad Adam, Lea Collin, Danielle Su, Ling (Kelly) He"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r import, include = FALSE}
+
+library(spotifyr)
+library(tidyverse)
+library(gridExtra)
+library(pgmm)
+library(GGally)
+
+Sys.setenv(SPOTIFY_CLIENT_ID = '40a6924532484d369b25a4a2e1be8388')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '183a0101898343a59d8c7193d5506db0')
+access_token <- get_spotify_access_token()
+```
+
+```{r dataimp, include = FALSE, cache = TRUE}
+data = read.csv("/Users/hammaadadam/Desktop/Columbia/Courses/STAT GR5702/Final Project/EDAV-FinalProject/Final_DSI_Playlist.csv", na.strings = "n/a")
+
+data = data %>% select(-artist_genres)
+
+artists <- unique(data$artist_name)
+artist_genres <- get_artists(artists[1])
+
+for(i in 2:length(artists)){
+  if(i != 873){
+    artist_genres = rbind(artist_genres, get_artists(artists[i]))
+  }
+}
+
+artist_genres = artist_genres %>% 
+                  select(artist_name, artist_genres) %>%
+                    distinct(artist_name, .keep_all = TRUE)
+
+data = data %>% left_join(artist_genres, by = "artist_name")
+```
+
+## Introduction
+
+  For our final project, we have decided to look at our class’ Spotify data, specifically from the “Your Top Songs 2017” playlists. This is a playlist made by Spotify with each users’ 100 most listened to songs in 2017. We were curious about the listening patterns of our class and the different metrics of each song along with how these metrics are correlated. 
+
+  Our team members are Hammaad Adam, Lea Collin, Ling “Kelly” He, and Danielle Su. Lea contributed to cleaning the survey data and exploring what features make songs and artists popular for this year’s EDAV class. Kelly worked on exploring general audio features of all the songs and some of the survey input data. Danielle worked on creating the initial data gathering survey and exploring trends within the class in terms of how student differ. Hammaad worked on exploring the commonalities ad key differences between different students' playlists, by songs, artists, and genre. Danielle and Kelly also created the interactive D3 component of the project.
+
+## Data Description
+
+  Spotify’s “Your Top Songs 2017” playlist was only created for users that met certain criteria. The criteria were that the user listened to 5 different artists, 30 different tracks, and 60 minutes of music from January 1st to November 1st. Note that this means all of December (and therefore likely a lot of holiday music) is not included in the data. 	
+	
+	We collected our data using Spotify’s R API, with useful information linked [here](https://www.rcharlie.com/spotifyr/). If a user gives the API a user ID and a playlist ID, the API makes it extremely easy to get different attributes for each song on the playlist. Some obvious attributes include track name, artist name, etc. More interesting features, including the features we explored most, are: genre, danceability, valence, energy, loudness, etc. For a more comprehensive list of these features, visit: [Spotify track features](https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/).
+	
+	To actually get our class’ Spotify user ID’s and playlist ID’s, we sent out a survey giving detailed instructions on how to provide this information. We also asked people to put in extra information about themselves, such as age, gender, nationality, etc., so that we could include these in our analysis.
+
+## Analysis of Data Quality
+
+## Main Analysis
+
+### Data Cleaning
+
+  Before we get to the analysis, it is worth briefly dicussing our data cleaning process. The respondents to the survey were instructed on how to find, copy, and paste their user and playlist ID’s from the Spotify application or Spotify webplayer. However, the actual ID’s still needed to be extracted from the strings that were copied. In order to extract the ID’s, we used R’s “stringr” package and Regex. Once these ID’s were extracted, it was straightforward to iterate through each ID, get the playlist features using the Spotify API, and progressively build up a dataframe with everyone’s songs. We then pulled in additional information (e.g. release date, genre) for each track, once again using the Spotoify API. The code for this process can be found on [github](https://l.messenger.com/l.php?u=https%3A%2F%2Fgithub.com%2FLeaCollin0518%2FEDAV-FinalProject&h=AT3MGiRM8KH89hVszJEo_gqW7DfgH-hBm50Hgl7jIz4WrV5niIYKuhEgphWp2eKdmXF9ugi6OPCQdwVW5KtW8mHfcGPmCWpwj5riADj5RtUZpHRochKKFxBr6WzUbPNiqn0FaYsK0IucOpd6ckZiwTb6).
+  
+### Key Questions
+
+Now that we've discussed our data collection and cleaning, let's dive into the analysis. Our data lends itself to a multitude of fascinating projects, and narrowing our scope of focus was a real challenge. However, we ultimately decided to focus on the key questions that allow us to comprehensively characterize the music listening habits of our DSI class. To this end, our analysis was guided by four overarching questions: 
+
+1. What are the distinctive features of a song popular within the DSI cohort?
+2. How do DSI listening habits compare with global trends?
+3. How similar are DSI students in their music preferences?
+4. What are the key ways in which DSI students differ from one another?
+
+### What are the distinctive features of a song popular within the DSI cohort?
+
+**Audio Features**
+
+One of the main questions we wanted to address was what makes a DSI song popular? To begin answering this question, we examined the various audio features of the 2400 songs collected from our survey and how they correlate with each other and other survey input variables. In particular, we examined the following nine audio features: danceability, energy, loudness, valence, tempo, acousticness, speechiness, and instrumentalness. Most of these metrics have values between 0 and 1, representing the level of each variable (closer to 0 means low and closer to 1 means high). Loudness and tempo however needed to be normalized in order to be between 0 and 1. We excluded the liveness variable since it detects the presence of an audience in the recording rather than measuring any characteristic of the song, which we thought was not a particularly interesting feature. The descriptions of those audio features can be found in the table below:
+
+```{r, include = FALSE}
+library(knitr)
+#the table might not look good when kniting to pdf - we can just do a list format instead
+features <- tibble(Feature = c("danceability", "energy", "loudness", "valence", "tempo", "acousticness", "speechiness", "instrumentalness"), 
+                   Description = c("Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity.",
+                                   "Energy represents a perceptual measure of intensity and activity.",
+                                   "Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typical range between -60 and 0 db.",
+                                   "Valence describes the musical positiveness conveyed by a track. ",
+                                   "Tempo represents the overall estimated tempo of a track in beats per minute (BPM).",
+                                   "Acousticness is a confidence measure of whether the track is acoustic.",
+                                   "Speechiness detects the presence of spoken words in a track. ",
+                                   "Predicts whether a track contains no vocals."))
+features
+```
+
+We shall first take a holistic approach and draw a parallel coordinates plot of all eight audio features of interest. We thought it would be interesting to see if there are potential clusters amongst those features conditioned on our survey input variables such as gender and location in 2017. 
+
+We first plot a parallel coordinate plot grouping by gender. Out of the 24 respondents, a third were female and the rest were male. We observe that each gender's audio feature behavior is different. Specifically, female users tend to listen to music with low acousticness, speechiness, and instrumentalness. In general, all features are well spread out in the value range between 0 and 1, except for loudness, which skews high, and speechiness, which skews low.
+
+```{r parcoorddata, include = FALSE}
+
+df <- data %>% select(danceability, energy, loudness, valence,
+        tempo, acousticness, speechiness, instrumentalness, 
+          user_id, Name, gender, location2017) 
+
+#normalize loudness, tempo to 0 to 1
+
+df <- df %>%
+  mutate(loudness=scales::rescale(loudness ,to=c(0, 1))) %>%
+  mutate(tempo=scales::rescale(tempo,to=c(0, 1)))
+```
+
+```{r parcoord, fig.height=3, fig.width=6}
+ggparcoord(df, columns = 1:8, alphaLines = .2, 
+           scale = "uniminmax", groupColumn = "gender", splineFactor = 10) +
+  ggtitle("Parallel Coordinate Plot by Gender") +
+  theme_minimal(15) +
+  theme(legend.position = "bottom")+
+  scale_color_manual(name="gender", 
+                        labels = c("Female", 
+                                   "Male"), 
+                        values = c("Female"="#663399",
+                                   "Male"="#66FFFF"))
+```
+
+We also drew a parallel coordinate plot with "Country in 2017" as the "groupColumn" to determine whether the location of Spotify users affect their music taste. Due to our limited data, we do not have enough country information other than USA, so we decided to group all the other countries into on category called "OTHER". Half of the 24 users were in USA in 2017. The two country groups are more intertwined together compared to the gender groups in the other plot, indicating that country did not have much impact on users' music taste (within our limited sample). 
+
+```{r parcoord2data, include = FALSE}
+locations <- unique(data$location2017)
+df <- df %>%
+  mutate(location2017 = as.character(location2017)) %>%
+  mutate(location2017_copy = location2017)
+df[df=="Chicago"] = "Chicago, USA"
+df <- df %>% 
+  mutate(country = strsplit(as.character(location2017), ", "))
+df$clean_country = NULL
+for (i in 1: nrow(df)){
+      df$clean_country[i] = last(df$country[[i]])
+}
+df[,"clean_country"] = fct_recode(df[,"clean_country"], Canada ="CA")
+#set all other countries to other if it's not USA
+levels(df$clean_country)[!levels(df$clean_country) == "USA"]<- "OTHER"
+```
+
+```{r parcoord2, fig.height=3, fig.width=6}
+ggparcoord(df, columns = 1:8, alphaLines = .2, 
+           scale = "uniminmax", groupColumn = "clean_country", 
+           splineFactor = 10) +
+  ggtitle("Parallel Coordinate Plot by 2017 Location") +
+  theme_minimal(15) +
+  theme(legend.position = "bottom") +
+  scale_color_manual(name="Country in 2017", 
+                        labels = c("USA", 
+                                   "OTHER"), 
+                        values = c("USA"="#FF6666",
+                                   "OTHER"="#3399FF"))
+```
+
+After this inital assessment, we wanted to analyze the quantitative relationships between the audio features. The below graph shows the correlation amongst each pair of features. It's not surprising that energy and loudness are the most positively correlated features, while energy and acousticness are the most negatively correlated features. As the name suggests, acousticness is a measure of how likely the track is to be acoustic; generally acoustic songs are considered to be more mellow and less high-energy. 
+
+```{r}
+library(pgmm)
+library(GGally)
+ggcorr(df[1:8], palette = "RdBu", label = TRUE, label_size = 2.5,
+size = 3, legend.position = "bottom", hjust = 1) +
+  theme_minimal(15) +
+  ggtitle("How are audio features correlated?") 
+```
+
+
+```{r corr, message = FALSE, warning = FALSE}
+ggcorr(df[1:8], palette = "RdBu", label = TRUE, label_size = 2.5,
+size = 3, legend.position = "bottom", hjust = 1) +
+  theme_minimal(15) +
+  ggtitle("How are audio features correlated?") 
+```
+
+**Popular Artists**
+
+We now turn our attention to exploring the most popular artists in the 2,400 songs. There are two ways to measure popularity: how many songs each artist has in the class' combined playlist (i.e. all 2,400 songs), and how many distinct playlists the artist appears in. The second is likely a better measure of overall popularity, as it is less sensitive to outliers. For example, one user listening to 15 songs by the same artist would make it seem popular using the first measure, even if no other student listened to that artist. The results of both these measures, however, are quite similar, as illustrated in the bar charts below. 
+
+```{r}
+track <- data %>% select(track_name, artist_name, Name)
+artist_df <- track %>%
+ group_by(artist_name) %>%
+ summarise(count = n()) %>%
+ arrange(-count)
+#bar graph
+ ggplot(head(artist_df, 30) , aes(x=reorder(artist_name, -count), 
+                                         y= count)) +
+        geom_col(color="darkblue", fill="lightblue") +
+        ggtitle("Which artist has the most songs in the data set?") +
+        theme_minimal()+
+        xlab("") + 
+        ylab("Number of songs") +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+artist_by_user_df <- track %>%
+                     group_by(Name) %>%
+                     summarise(artists = 
+                            paste(sort(unique(artist_name)),collapse=","))
+
+artist_by_user_df <- artist_by_user_df %>%
+   mutate(artists = strsplit(as.character(artists), ",", useBytes = TRUE))
+
+all_artists = unique(track$artist_name)
+
+artist_df$appearance <-0
+for (i in 1: nrow(artist_df)){
+  for (j in 1:nrow(artist_by_user_df)){
+    curr_artist = artist_df$artist_name[i]
+    curr_artists = artist_by_user_df$artists[[j]]
+    if (curr_artist %in% curr_artists){
+      artist_df$appearance[i] = artist_df$appearance[i] +1
+    }
+  }
+}
+artist_df <- artist_df %>%
+ arrange(-appearance)
+
+#bar graph
+ggplot(head(artist_df, 30) , aes(x=reorder(artist_name, -appearance), y= appearance)) +
+  geom_col(color="darkblue", fill="lightblue") +
+  ggtitle("Which artist appears in the most distinct playlists?") +
+  theme_minimal() +
+  xlab("") + 
+  ylab("Number of users") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+**Popular Genres**
+
+Another interesting question to explore is how popular various genres are within the cohort. We plot the 10 most popular genres below, along with the proportion of all songs that fall into each. An important note is that Spotify's genre information is at an artist level, not a track level. A partial consequence of this fact is that one song can be tagged as multiple genres, as the same artist can dabble in multiple musical styles. However, this is not necessarily inaccurate, as the song-genre mapping is not strictly one-to-one. For example, "Bad and Boujee" by Migos is predominantly a trap song, but can also be said to be rap, hip hop, or pop rap. Further, songs by and large reflect the primary genre of their artist. As a result, while classifying genres at an artist level is not perfect, it is good enough to draw broad conclusions. 
+
+```{r genre, message = FALSE, warning = FALSE}
+
+user_genre_count <- matrix(nrow=0, ncol = 3)
+
+for(name in unique(data$Name)){
+  data_user <- subset(data, Name == name)
+  user_genres_vector <- as.vector(data_user$artist_genres)
+  user_genres <- unique(Reduce(c, user_genres_vector))
+  count = 0
+  for(genre in user_genres){
+    count = 0
+    for(i in 1:100){
+      if(genre %in% data_user$artist_genres[i][[1]]){
+        count = count + 1
+      }
+    }
+    user_genre_count = rbind(user_genre_count, c(name, genre, count))
+  }
+}
+
+user_genre_count = data.frame(user_genre_count, stringsAsFactors=FALSE)
+user_genre_count[,3] = as.numeric(user_genre_count[,3])
+names(user_genre_count) = c("Name", "Genre", "Freq")
+
+user_genre_count = user_genre_count %>% group_by(Name) %>% arrange(-Freq, .by_group = TRUE)
+
+dsi_top_genres <- user_genre_count %>% group_by(Genre) %>% 
+                    summarise(Freq=sum(Freq)) %>%
+                      mutate(percent = Freq/length(unique(user_genre_count$Name))/100) %>% 
+                        arrange(-percent) %>% 
+                          mutate(Name= "DSI Top") %>% 
+                            select(Name, Genre, Freq, percent)
+
+ggplot(dsi_top_genres[1:10,], aes(x = fct_reorder(Genre, percent), y = percent)) + 
+  geom_bar(stat = "identity") + 
+    ylab("Proportion of All Songs") + xlab("") + 
+      coord_flip() + theme_minimal()
+
+```
+
+While pop is overwhelmingly the most popular genre, there is little difference between the 2nd and the 10th ranked genres, indicating the DSI cohort is quite varied in its music tastes.
+
+### How do DSI listening habits compare with global trends?
+
+Now that we have a good sense about the features of a popular DSI song, we would like to investigate how these preferences are different from the population at large. We find that there are two key points of differentiation: loudness and genre. 
+
+**Loudness**
+
+  The parallel coordinate plots presented earlier raise the question: are there features specific to DSI songs that are more prominent than in other popular music? To begin answering this questions, we shall compare the most popular songs within the DSI to the songs that were most popular in the country and the world in 2017. In order to do this, we got the most common 50 songs and most common 10 artists from the dataset we created. We defined the most common songs simply as the songs that appeared the highest number of times in the dataset. We could not exactly do this for the artist because an artist could show up multiple times on a single user’s playlist if they have multiple songs on the playlist from that artist. Instead, we grouped by user id and then got the artists that appeared the highest number of times. This ensured that an artist only showed up once per user. We thought this was a more accurate representation of artist popularity within our class. (still need to actually do this). The code to get these songs and artists follows. 
+  
+	INSERT SONG/ARTIST EXTRACTION CODE HERE
+	
+	Once we got the top DSI songs, we looked at different features and different plotting techniques to see if there was anything unique about these songs. We decided to compare the songs to three of Spotify’s playlists. We compared these to: “Global Top 50”, “United States Top 50” and “Top Tracks 2017”. Since these are playlists with some of the most popular music on Spotify, we thought it made sense to compare our playlists to it. We chose to compare the continuous features that Spotify’s API provides. Because these are continuous and we were comparing across different playlists, we created density curves and boxplots to easily compare between all the different playlists. Though most of the graphs showed that our class’ tastes match up closely with all other Spotify users, there was one feature that stood out: loudness. For whatever reason, DSIers are very into loud music. Even the songs that were not amongst the most popular in our class were still louder than songs on the other three playlists. 
+	
+	INSERT CODE AND GRAPHS HERE
+
+**Genre**
+
+
+We can also compare genre popularity for the DSI cohort vs the global Spotify population. The following dot plot compares genres within the DSI playlist to Spotify's Top Tracks of 2017 playlist. 
+
+```{r genre_compare, message = FALSE, warning = FALSE}
+# Join genres to top playlists
+
+top_2017 <- get_playlist_audio_features('spotify', '37i9dQZF1DX5nwnRMcdReF')
+top2017_artists <- unique(top_2017$artist_name)
+
+top2017_artist_genres <- get_artists(top2017_artists[1])
+
+for(i in 2:length(top2017_artists)){
+  if(TRUE){
+    top2017_artist_genres = rbind(top2017_artist_genres, get_artists(top2017_artists[i]))
+    print(i)
+  }
+}
+
+top2017_artist_genres = top2017_artist_genres %>% 
+                        select(artist_name, artist_uri, artist_genres, artist_popularity, artist_num_followers) %>%
+                          distinct(artist_name, .keep_all = TRUE)
+
+top_2017 = top_2017 %>% left_join(top2017_artist_genres, by = "artist_name")
+
+# Compute most popular genres for the Top playlist
+
+top2017_genre_count <- matrix(nrow=0, ncol = 3)
+
+top2017_genres_vector <- as.vector(top_2017$artist_genres)
+top2017_genres <- unique(Reduce(c, top2017_genres_vector))
+for(genre in top2017_genres){
+  count = 0
+  for(i in 1:nrow(top_2017)){
+    if(genre %in% top_2017$artist_genres[i][[1]]){
+      count = count + 1
+    }
+  }
+  top2017_genre_count = rbind(top2017_genre_count, c("Top 2017", genre, count))
+}
+
+top2017_genre_count = data.frame(top2017_genre_count, stringsAsFactors=FALSE)
+top2017_genre_count[,3] = as.numeric(top2017_genre_count[,3])
+names(top2017_genre_count) = c("Name", "Genre", "Freq")
+
+top2017_genre_count = top2017_genre_count %>% group_by(Name) %>% 
+                        arrange(-Freq, .by_group = TRUE) %>% 
+                          mutate(percent = Freq/nrow(top_2017)) 
+
+names(dsi_top_genres) = names(top2017_genre_count)
+
+top_genres = dsi_top_genres[1:20,] %>% left_join(top2017_genre_count, by = "Genre") %>%
+              mutate(`DSI Top Songs`=percent.x, `2017 Top Songs`=percent.y) %>% ungroup() %>%
+                select(Genre, `DSI Top Songs`, `2017 Top Songs`)
+
+top_genres$`2017 Top Songs`[is.na(top_genres$`2017 Top Songs`)] = 0
+
+top_genres = top_genres %>%
+              arrange(-`DSI Top Songs`) %>% 
+                mutate(Genre = factor(Genre, levels = .$Genre)) %>%
+                  gather(key = "Name", value = "percent", -Genre)
+
+theme_dotplot <- theme_bw(18) +
+  theme(axis.text.y = element_text(size = rel(.75)),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size = rel(.75)),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_line(size = 0.5),
+        panel.grid.minor.x = element_blank())
+
+ggplot(top_genres, aes(x=percent, 
+                         y = fct_rev(Genre), color=Name)) +
+  geom_point() + ylab("") + theme_dotplot +
+    theme(legend.position="top") + 
+      theme(legend.title=element_blank()) + 
+        xlab("Percentage of Songs")
+
+# Global Top 2017
+
+top2017_artists <- unique(top_2017$artist_name)
+
+top2017_artist_genres <- get_artists(top2017_artists[1])
+
+for(i in 2:length(top2017_artists)){
+  if(TRUE){
+    top2017_artist_genres = rbind(top2017_artist_genres, get_artists(top2017_artists[i]))
+    print(i)
+  }
+}
+
+top2017_artist_genres = top2017_artist_genres %>% 
+  select(artist_name, artist_uri, artist_genres, artist_popularity, artist_num_followers) %>%
+  distinct(artist_name, .keep_all = TRUE)
+
+top_2017 = top_2017 %>% left_join(top2017_artist_genres, by = "artist_name")
+
+# Compute most popular genres for the Top playlist
+
+top2017_genre_count <- matrix(nrow=0, ncol = 3)
+
+top2017_genres_vector <- as.vector(top_2017$artist_genres)
+top2017_genres <- unique(Reduce(c, top2017_genres_vector))
+for(genre in top2017_genres){
+  count = 0
+  for(i in 1:nrow(top_2017)){
+    if(genre %in% top_2017$artist_genres[i][[1]]){
+      count = count + 1
+    }
+  }
+  top2017_genre_count = rbind(top2017_genre_count, c("Top 2017", genre, count))
+}
+
+top2017_genre_count = data.frame(top2017_genre_count, stringsAsFactors=FALSE)
+top2017_genre_count[,3] = as.numeric(top2017_genre_count[,3])
+names(top2017_genre_count) = c("Name", "Genre", "Freq")
+
+top2017_genre_count = top2017_genre_count %>% group_by(Name) %>% 
+                        arrange(-Freq, .by_group = TRUE) %>% 
+                          mutate(percent = Freq/nrow(top_2017)) 
+
+```
+
+Overall, DSI tastes are quite different from the mainstream! Though pop is the most common genre, it is vastly under-represented in the aggregate DSI playlist when compared to 2017's top tracks. Additionally, DSI students seem to like rock genres more and rap/hip hop genres less than the global population. 
+
+We now shift our attention to the latter two questions, which focus on the similarities and differences between the listening habits of specific individuals win the DSI.
+
+### How similar are DSI students in their music preferences?
+
+First, we'd like to examine the overlap in musical taste between DSI students. An obvious first question to ask is: how similar are any two individuals' playlists? One way to answer this question is by determining how many songs any two users have in common. We can summarize this in the following heatmap, where the colour of each cell represents the number of songs the two playlists have in common. For the sake of contrast, we omit the songs shared by a playlist and itself (the diagonal elements of the matrix).
+
+```{r heatmap, message = FALSE, warning = FALSE}
+
+# Determine which users have specific songs on their playlists
+
+song_user <- data %>% select(Name, track_name, artist_name) %>% 
+              cbind(1) %>% rename(binaryid="1") %>% 
+                distinct(Name, artist_name, track_name, .keep_all = TRUE) %>%
+                  spread(Name, binaryid, fill = 0) %>%
+                    group_by(track_name, artist_name) %>% 
+                      summarise_all(sum)
+
+nusers = length(song_user) - 2
+song_intersection <- data.frame(matrix(nrow=nusers, ncol=nusers+1))
+colnames(song_intersection) = append(c("Name"), names(song_user)[-c(1,2)])
+song_intersection$Name = colnames(song_intersection)[-1]
+
+for(i in 1:nusers){
+  for(j in 2:(nusers+1)){
+    if(i+1==j){
+      song_intersection[i,j] = 0
+    }
+    else{
+      song_intersection[i,j] = nrow(subset(song_user, song_user[,i+2]==1 & song_user[,j+1]==1))
+    }
+  }
+}
+
+song_intersection = song_intersection %>% gather(key = "sharer", value = "nshared", -Name)
+  
+theme_heat <- theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.ticks = element_blank(), 
+        axis.text.x = element_text(angle = 60, hjust=0))
+
+ggplot(song_intersection, aes(x = Name, y = fct_rev(sharer))) + 
+  geom_tile(aes(fill = nshared/100), color = "white") + 
+    coord_fixed() + theme_heat + scale_x_discrete(position = "top") +
+      scale_fill_gradient2(low = "white", mid = "white", high = "darkblue", 
+        name = "Songs Shared \n (% of Total)", labels = scales::percent) + 
+          xlab("") + ylab("")
+
+```
+
+Each user is fairly unique: the largest degree of overlap between any two playlists is ~10%. Lea, Hammaad, and Yimin have the most songs in common, whereas Eric's taste is almost entirely distinct. 
+
+### What are the key ways in which DSI students differ from one another?
+
+A key feature of every playlist is diversity: the range of music a student listens to. We can define diversity in a number of ways, but for the purposes of this project, we will view it in two ways: variety of artists, and variety of genres. Let's first look at aritst diversity. The two charts below illustrate the range in artist diversity between different users. The graph on the left shows the total number of artists represented in a user's playlist; the graph on the right shows the proportion of a playlist accounted for by a user's 10 favourite artists.
+
+```{r artistsdiv1, message = FALSE, warning = FALSE}
+
+artist_freq_user <- data %>% group_by(Name, artist_name)  %>%
+                      summarise(Freq = n()) %>% arrange(Name, desc(Freq))
+user_total_artists <- artist_freq_user %>% summarise(nartists = n())
+
+adiv1 <- ggplot(user_total_artists, aes(x=fct_reorder(Name, nartists), 
+                                        y = nartists)) + 
+          geom_bar(stat = "identity") + 
+            ylab("Number of Distinct Artists") + xlab("") + 
+              ggtitle('Number of Distinct \n Artists') +
+              coord_flip() + theme_minimal()
+
+user_names <- unique(artist_freq_user$Name)
+user_top10_artists <- artist_freq_user[1:10,]
+for(i in 2:length(user_names)){
+  user_top = subset(artist_freq_user, Name == user_names[i])[1:10,]
+  user_top10_artists = rbind(user_top10_artists, user_top)
+}
+
+user_top10_concentration <- user_top10_artists %>% group_by(Name)  %>%
+  summarise(Sum = sum(Freq)) %>% arrange(Sum)
+
+adiv2 <- ggplot(user_top10_concentration, aes(x = fct_reorder(Name, Sum), 
+                                              y = Sum)) + 
+          geom_bar(stat = "identity") + 
+          theme_minimal () + xlab("") + 
+            ggtitle('Proportion of Songs from \n Top 10 Artists') + 
+              coord_flip() 
+
+grid.arrange(adiv1, adiv2, nrow =1 , ncol = 2)
+
+```
+
+There is clearly a massive range in artist diversity. Users like Zach and Shadi have a large number of artists in their playlists and a small percentage accounted for by their top artists, while Andrea and Mert have just the opposite. The strong inverse relationship between these two measures of artist diversity is reflected in the following scatterplot
+
+```{r artistsdiv2, message = FALSE, warning = FALSE}
+
+user_artist_concentration <- user_total_artists %>% 
+                              left_join(user_top10_concentration, by="Name") %>%
+                                select(Name, nartists, top10 = "Sum")
+
+ggplot(user_artist_concentration, aes(y=nartists, x=top10)) + 
+  geom_point() + ylab("Number of Distinct Artists") + 
+    xlab("Proportion of Songs from Top 10 Artists")
+```
+
+We now turn our attention to genres. Measuring a playlists genre diversity is tricker than artist diversity, as each song can have multiple genre tags. In order to overcome this, we introduce the concept of spanning genres: the minimum number of distinct genres required to span a user's entire playlist. (Note: the code to compute genre diversity is fairly complex, and is not shown here for the sake of brevity. Please see the appendix for details). The chart on the left shows the genre spans for each user. We can also measure genre diversity by the percentage of a playlist's songs that fall into the user's favourite genres, as shown in the chart on the right.
+
+```{r spanninggenres, include = FALSE}
+
+# Get list of all genres
+
+genre_list <- as.vector(data$artist_genres)
+all_genres <- unique(Reduce(c, genre_list))
+
+# Calculate the number of songs that fall into each genre for a user
+
+user_genre_count <- matrix(nrow=0, ncol = 3)
+
+for(name in unique(data$Name)){
+  data_user <- subset(data, Name == name)
+  user_genres_vector <- as.vector(data_user$artist_genres)
+  user_genres <- unique(Reduce(c, user_genres_vector))
+  count = 0
+  for(genre in user_genres){
+    count = 0
+    for(i in 1:100){
+      if(genre %in% data_user$artist_genres[i][[1]]){
+        count = count + 1
+      }
+    }
+    user_genre_count = rbind(user_genre_count, c(name, genre, count))
+  }
+}
+
+user_genre_count = data.frame(user_genre_count, stringsAsFactors=FALSE)
+user_genre_count[,3] = as.numeric(user_genre_count[,3])
+names(user_genre_count) = c("Name", "Genre", "Freq")
+
+user_genre_count = user_genre_count %>% group_by(Name) %>% arrange(-Freq, .by_group = TRUE)
+
+# Calculate the minimum spanning genres for each playlist
+
+genre_span <- function(name){
+  data_name = subset(data, Name == name)
+  name_vector <- as.vector(data_name$artist_genres)
+  name_genres <- unique(Reduce(c, name_vector))
+  count = 0
+  min_genres = matrix(nrow=0, ncol=3)
+  nremoved = 0
+  non_null_indices = c()
+  
+  for(i in 1:100){
+    if(!is.null(data_name$artist_genres[i][[1]])){
+      non_null_indices = c(non_null_indices, i)
+    }
+  }
+  data_name = data_name[non_null_indices,]
+  nrows = nrow(data_name)
+  
+  while(nrow(data_name)>0){
+    name_genre_count = matrix(nrow = 0, ncol = 3)
+    for(genre in name_genres){
+      count = 0
+      for(i in 1:100){
+        if(genre %in% data_name$artist_genres[i][[1]]){
+          count = count + 1
+        }
+      }
+      name_genre_count = rbind(name_genre_count, c(name, genre, count))
+    }
+    name_genre_count = data.frame(name_genre_count, stringsAsFactors = FALSE)
+    names(name_genre_count) = c("Name", "Genre", "Freq")
+    name_genre_count$Freq = as.numeric(name_genre_count$Freq)
+    most_genre = name_genre_count[name_genre_count$Freq == max(name_genre_count$Freq),][1,2]
+    indices_to_keep = c()
+    for(i in 1:100){
+      if(!most_genre %in% data_name$artist_genres[i][[1]] & !is.null(data_name$artist_genres[i][[1]])){
+        indices_to_keep = c(indices_to_keep, i)
+      }
+    }
+    old_length = nrow(data_name)
+    data_name = data_name[indices_to_keep,]
+    new_length = nrow(data_name)
+    min_genres = rbind(min_genres, c(name, most_genre, old_length - new_length))
+  }
+  min_genres = data.frame(min_genres, stringsAsFactors = FALSE)
+  names(min_genres) = c("Name", "Genre", "Songs")
+  return(min_genres)
+}
+
+genre_spans <- genre_span(as.character(unique(data$Name)[1]))
+
+for(i in 2:length(unique(data$Name))){
+  genre_spans <- rbind(genre_spans, genre_span(as.character(unique(data$Name)[i])))
+}
+
+user_top_genre <- genre_spans[1,]
+
+for(i in 1:length(user_names)){
+  top_g = subset(genre_spans, Name == user_names[i])[1,]
+  user_top_genre = rbind(user_top_genre, top_g)
+}
+
+user_top_genre = user_top_genre[2:25,]
+
+user_n_genres <- genre_spans %>% group_by(Name) %>% 
+                    summarise(ngenres=n()) %>% 
+                      inner_join(user_top_genre, by = "Name") %>%
+                        select(Name, ngenres, top_genre = Genre, top_genre_songs = Songs) %>%
+                          mutate(top_genre_songs = as.numeric(top_genre_songs))
+
+```
+
+```{r genrediv1, message = FALSE, warning = FALSE}
+
+gdiv1 <- ggplot(user_n_genres, 
+          aes(x = fct_reorder(factor(Name), ngenres), 
+              y = ngenres)) + 
+          geom_bar(stat = "identity") + 
+          theme_minimal () + ylab("") + xlab("") +
+            ggtitle('Number of Spanning \n Genres') + 
+              coord_flip()
+
+gdiv2 <- ggplot(user_n_genres, 
+          aes(x = fct_reorder(factor(Name), top_genre_songs), 
+              y = top_genre_songs/100)) + 
+          geom_bar(stat = "identity") + 
+          theme_minimal () + ylab("") + xlab("") +
+            ggtitle('Proportion of Songs in \n Top Genre') + 
+              scale_y_continuous(labels = scales::percent) +
+              coord_flip()
+
+grid.arrange(gdiv1, gdiv2, nrow =1 , ncol = 2)
+
+```
+
+Again, we observe that the DSI has a massive range in genre diversity. The most striking example is Tom: ~90% of his songs come from the same genre (rap)! On the other end of the spectrum, Nico and Zach have both a small percentage of songs in one genre, and a large number of spanning genres. 
+
+It is also worth investigating the difference between genre and artist diversity. Are there users who listen to a large number of artists, but a small number of genres? Or is there a strong positive relation between the number of distinct artists and number of spanning genres? We investigate these relationships with the following scatterplots. 
+
+```{r genreartistdiv, message = FALSE, warning = FALSE}
+
+artist_genre_concentration <- user_artist_concentration %>% inner_join(user_n_genres, by = "Name")
+
+agdiv1 <- ggplot(artist_genre_concentration, aes(x= nartists, y = ngenres)) +
+            geom_point() + theme_classic() + xlab("Number of Distinct Artists") + 
+              ylab("Number of Spanning Genres")
+
+agdiv2 <- ggplot(artist_genre_concentration, aes(y= top_genre_songs, x = top10)) + 
+            geom_point() + theme_classic() + 
+              ylab("% of Songs in Top Genre") + 
+                xlab("% of Songs By Top 10 Artists")
+
+grid.arrange(agdiv1, agdiv2, nrow =1 , ncol = 2)
+
+```
+
+There seems to be a positive association between number of spanning genres and number of distinct artists (left panel). This makes sense, but is not particularly surprising. The chart on the right, however, is more interesting. While there does seem to be a generally positive association, it is not very strong. For example, a large number of people have ~40% of songs in their top genre, but the proportion represented by their top 10 artist varies widely. Our hypothesis is that with more sample, we would see clearer clusters. These clusters would represent artist-genre joint diversityL whether a user listens to a lot of artists across a bunch of different genres (high diversity) or a large number of artists across a small number of genres (medium diversity), or a small number of artists across a small number of genres (low diversity). 
+
+## Conclusion
+
+  The main limitation of our project is that we didn’t collect as much data from our classmates as we would have liked. We ended up collecting playlist information from 24 users (including ourselves). We attribute the lack of responses in part to the fact that Spotify was not accessible to everyone in 2017. For example, Spotify is not supported in China. This was not absolutely detrimental to our project, however, because there are still 100 songs per playlist and people’s music taste varied enough that we had a large number of songs to analyze.
+  
+  Given more time, we would have also analyzed Spotify users’ “Your Wrapped 2018”, which is the exact same concept as the “Your Top Songs 2017” playlist. We did not do this as the 2018 playlist was recently released. We wanted to do this to be able to analyze if people’s tastes had changed over time and if so, in what ways.
+  
+  Through this project, we learned a lot about how to collect data through an API and use it in R. We also learned how to combine data from different sources as we had to combine the survey data with what we could get from the API. We learned more about our cohort and their propensity for loud music.
