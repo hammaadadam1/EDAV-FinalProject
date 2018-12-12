@@ -14,8 +14,8 @@ knitr::opts_chunk$set(warning = FALSE,
 ```{r, include=FALSE}
 library(spotifyr)
 library(tidyverse)
-Sys.setenv(SPOTIFY_CLIENT_ID = 'afe3177c5c61437f917bf180a5370fce')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = '4b0f774e220b41ed913d54c58c52dc1e')
+Sys.setenv(SPOTIFY_CLIENT_ID = 'XXXXXXX')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = 'XXXXXXXX')
 access_token <- get_spotify_access_token()
 ```
 
