@@ -19,8 +19,8 @@ library(gridExtra)
 library(pgmm)
 library(GGally)
 
-Sys.setenv(SPOTIFY_CLIENT_ID = '40a6924532484d369b25a4a2e1be8388')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = '183a0101898343a59d8c7193d5506db0')
+Sys.setenv(SPOTIFY_CLIENT_ID = '')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '')
 access_token <- get_spotify_access_token()
 ```
 
