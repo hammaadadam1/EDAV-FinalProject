@@ -5,7 +5,7 @@ date: December 10, 2018
 output: html_document
 ---
 
-Note: All of the code for this project can be found here: https://github.com/LeaCollin0518/EDAV-FinalProject.
+Note: All of the code for this project can be found [here](https://github.com/LeaCollin0518/EDAV-FinalProject).
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -19,12 +19,13 @@ library(gridExtra)
 library(pgmm)
 library(GGally)
 
-Sys.setenv(SPOTIFY_CLIENT_ID = '')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = '')
+Sys.setenv(SPOTIFY_CLIENT_ID = 'b273df75336c485596266c68d3e7c1c2')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = 'e88980163181450eb429c2f3f4723f90')
 access_token <- get_spotify_access_token()
 ```
 
 ```{r dataimp, include = FALSE, cache = TRUE}
+setwd("~/Columbia/EDAV/FinalProject/EDAV-FinalProject")
 data = read.csv("Final_DSI_Playlist.csv", na.strings = "n/a")
 
 data = data %>% select(-artist_genres)
@@ -135,7 +136,7 @@ Our team members are Hammaad Adam, Lea Collin, Ling (Kelly) He, and Danielle Su.
 
 Spotify's "Your Top Songs 2017" playlist was only created for users that met certain criteria: user listened to at least 5 different artists, 30 different tracks, and 60 minutes of music from January 1st to November 1st, 2017. An interesting implication of the dates used for this playlist is that all of December, and therefore likely a lot of holiday music, is not included in the data.
   
-We collected our data using Spotify's API and spotifyr, a R wrapper, that was developed to be used with it.(For more information on the wrapper see: https://www.rcharlie.com/spotifyr/.) Using spotifyr, you can input a user ID and a playlist ID, and extract all the metadata Spotify has on each track of the playlist. All of the essential attributes of the track are included, such as track name and artist name. In addition to that, Spotify also has their own calculated audio features for each track including: genre, danceability, valence, energy, loudness, and track popularity. A more thorough description of these features can be found under **Audio Features**, later on in this report.
+We collected our data using Spotify's API and spotifyr, a R wrapper, that was developed to be used with it.(For more information on the wrapper see [here](https://www.rcharlie.com/spotifyr/). Using spotifyr, you can input a user ID and a playlist ID, and extract all the metadata Spotify has on each track of the playlist. All of the essential attributes of the track are included, such as track name and artist name. In addition to that, Spotify also has their own calculated audio features for each track including: genre, danceability, valence, energy, loudness, and track popularity. A more thorough description of these features can be found under **Audio Features**, later on in this report.
 
 In order to actually get the Spotify user IDs and playlist IDs for our classmates, we sent out a survey giving detailed instructions on how to provide this information. We also asked classsmates to optionally add information about themselves, such as age, gender, and nationality, so that we could explore whether there were any trends within these smaller subsets of our class population.
 
@@ -176,10 +177,10 @@ print (sum(is.na(data_2$artist_genres)))
 Before we get to the analysis, it is worth briefly dicussing our data cleaning process. The respondents to the survey were instructed on how to find, copy, and paste their user and playlist ID's from the Spotify application or Spotify webplayer. However, the actual ID's still needed to be extracted from the strings that were copied. In order to extract the ID's, we used R's **stringr** package and Regex. Once these ID's were extracted, it was straightforward to iterate through each ID, get the playlist features using the Spotify API, and progressively build up a dataframe with everyone's songs. We then pulled in additional information (e.g. album release date, genre) for each track, once again using the Spotify API. 
 
 The code for these processes can be found on github here: 
-https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/lea-DataCleaning.R
-https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/Cleaning%20and%20Getting%20Album%20Data.Rmd
-https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/DataImportGenre.R
-  
+[Data Cleaning](https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/lea-Work/DataCleaning.R)
+[Getting Album Data](https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/CleaningAlbumData.Rmd)
+[Getting Genre](https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/Hammaad-Work/DataImportGenre.R)
+
 ### Key Questions
 
 Now that we've discussed our data collection and cleaning, let's dive into the analysis. Our data lends itself to a multitude of fascinating projects, and narrowing the scope of our focus was a real challenge. However, we ultimately decided to focus on the key questions that allow us to comprehensively characterize the music listening habits and tastes of our DSI class. To this end, our analysis was guided by four overarching questions: 
@@ -1033,11 +1034,11 @@ ggplotly(g)
 
 ### V. Executive Summary
 
-In this project, our aim was to comprehensively characterize our DSI cohort’s music listening preferences using every student's “Your Top Songs 2017” playlist on Spotify. In this section, we present a summary of our most interesting findings. In order to adequately sum up our class’ listening habits, we consider two questions. First, what are the unique listening habits of the cohort as a whole? And second, how diverse is the cohort’s taste in music, that is, how do individuals within the class differ from one another? 
+In this project, our aim was to comprehensively characterize our DSI cohort's music listening preferences using every student's "Your Top Songs 2017" playlist on Spotify. In this section, we present a summary of our most interesting findings. In order to adequately sum up our class' listening habits, we consider two questions. First, what are the unique listening habits of the cohort as a whole? And second, how diverse is the cohort's taste in music, that is, how do individuals within the class differ from one another? 
 
 **What are the unique listening habits of the cohort as a whole?**
 
-To summarize the unique features of the DSI cohort, we compared the audio features of the songs most popular within the DSI to 2017’s overall most popular songs. For most variables, including energy, danceability, and valence (i.e. musical happiness), DSI songs ran the gamut from high to low, and were not particularly differentiated. There was however, a marked difference in loudness, a variable Spotify describes as “primary psychological correlate of physical strength.” The chart below compares the loudness distribution of songs listened to by the DSI cohort to that of 2017's most popular songs, both nationally and globally. The results are stark: the DSI as a whole seems to love loud music. Both the 50 most popular DSI songs and all DSI songs show a higher level of loudness than the displayed benchmarks.
+To summarize the unique features of the DSI cohort, we compared the audio features of the songs most popular within the DSI to 2017's overall most popular songs. For most variables, including energy, danceability, and valence (i.e. musical happiness), DSI songs ran the gamut from high to low, and were not particularly differentiated. There was however, a marked difference in loudness, a variable Spotify describes as "primary psychological correlate of physical strength". The chart below compares the loudness distribution of songs listened to by the DSI cohort to that of 2017's most popular songs, both nationally and globally. The results are stark: the DSI as a whole seems to love loud music. Both the 50 most popular DSI songs and all DSI songs show a higher level of loudness than the displayed benchmarks.
 
 ```{r, echo = FALSE, fig.align="center"}
 edav_loud_box + xlab("") + 
@@ -1051,7 +1052,7 @@ genre_dotplot + ggtitle("Pop Rules, but Rock Isn't Far Behind!") +
   theme(plot.title = element_text(size=16, hjust = 0.5))
 ```
 
-**How diverse is the DSI cohort’s musical taste?**
+**How diverse is the DSI cohort's musical taste?**
 
 We now focus our attention inwards, and investigate the similarities and differences between individuals in the DSI. An obvious first step is to determine how differentiated each playlist is. To do so, we plot the heat map below, in which the color of each cell represents the number of songs (as a percentage of the total playlist) the user on the x axis has in common with the user on the y axis. Note that for the sake of contrast, we omit cells on the diagonal (a playlist has theoretically has 100% overlap with itself, but this makes it hard to see other patterns).  
 
@@ -1060,7 +1061,7 @@ song_heatmap + ggtitle("Who's Your Musical Soulmate?") +
   theme(plot.title = element_text(size=16, hjust = 0.5))
 ```
 
-Though a few users (e.g. Lea, Hammaad, Yimin) have a lot in common, most students exhibit limited overlap. Moreover, some users (e.g. Eric, Shadi) have almost no songs in common with other DSI students.  The next chart offers a potential explanation for this trend. We plot track popularity—a Spotify-defined measure of how popular a given song is—for each track in a user’s playlist. We can think of the median of this boxplot as a measure of how “indie” each student is. We note that users with a large amount of overlap in the previous graph (e.g. Lea, Hammaad) are less indie, and tend to listen to more popular music. On the other hand, users with less in common (e.g. Eric) are the most indie, and listen to some fairly obscure songs.
+Though a few users (e.g. Lea, Hammaad, Yimin) have a lot in common, most students exhibit limited overlap. Moreover, some users (e.g. Eric, Shadi) have almost no songs in common with other DSI students.  The next chart offers a potential explanation for this trend. We plot track popularity (a Spotify-defined measure of how popular a given song is) for each track in a user's playlist. We can think of the median of this boxplot as a measure of how "indie" each student is. We note that users with a large amount of overlap in the previous graph (e.g. Lea, Hammaad) are less indie, and tend to listen to more popular music. On the other hand, users with less in common (e.g. Eric) are the most indie, and listen to some fairly obscure songs.
 	
 ```{r, echo = FALSE, fig.align="center"}
 box_indie + ggtitle("Who's the Most Indie?") + 
@@ -1075,7 +1076,7 @@ gdiv2 + ggtitle("Tom Can't Get Enough of His Favorite Genre") +
     theme(plot.title = element_text(size=16, hjust = 0.5))
 ```
 
-Overall, we conclude that though there are some unifying features, the DSI cohort's taste in music is remarkably varied. This diversity is multi-faceted: there are over 1000 artists and 600 genres represented in the combined playlist that formed our data set. A direct consequence of this fact is that it is hard to know what music to expect at a gathering of DSI students: it depends entirely on who is in charge. Perhaps it’s Lea, keeping people entertained with a steady stream of Top 40 hits, or Eric, diving into depths of indie, or Tom, bumping the latest Kendrick Lamar song. Just be prepared, for no matter who controls the music: it might get loud…
+Overall, we conclude that though there are some unifying features, the DSI cohort's taste in music is remarkably varied. This diversity is multi-faceted: there are over 1000 artists and 600 genres represented in the combined playlist that formed our data set. A direct consequence of this fact is that it is hard to know what music to expect at a gathering of DSI students: it depends entirely on who is in charge. Perhaps it's Lea, keeping people entertained with a steady stream of Top 40 hits, or Eric, diving into depths of indie, or Tom, bumping the latest Kendrick Lamar song. Just be prepared, for no matter who controls the music: it might get loud!
 
 ### VI. Interactive Component
 
