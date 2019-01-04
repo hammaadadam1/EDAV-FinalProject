@@ -177,8 +177,11 @@ print (sum(is.na(data_2$artist_genres)))
 Before we get to the analysis, it is worth briefly dicussing our data cleaning process. The respondents to the survey were instructed on how to find, copy, and paste their user and playlist ID's from the Spotify application or Spotify webplayer. However, the actual ID's still needed to be extracted from the strings that were copied. In order to extract the ID's, we used R's **stringr** package and Regex. Once these ID's were extracted, it was straightforward to iterate through each ID, get the playlist features using the Spotify API, and progressively build up a dataframe with everyone's songs. We then pulled in additional information (e.g. album release date, genre) for each track, once again using the Spotify API. 
 
 The code for these processes can be found on github here: 
+
 [Data Cleaning](https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/lea-Work/DataCleaning.R)
+
 [Getting Album Data](https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/CleaningAlbumData.Rmd)
+
 [Getting Genre](https://github.com/LeaCollin0518/EDAV-FinalProject/blob/master/Hammaad-Work/DataImportGenre.R)
 
 ### Key Questions
